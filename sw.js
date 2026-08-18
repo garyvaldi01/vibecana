@@ -1,8 +1,9 @@
-const CACHE_NAME = 'vibecana-v1';
+const CACHE_NAME = 'vibecana-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/icons/icon-192.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -26,43 +27,30 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('cdn.tailwindcss.com') ||
-      event.request.url.includes('unpkg.com') ||
-      event.request.url.includes('cdn.jsdelivr.net') ||
-      event.request.url.includes('fonts.googleapis.com') ||
-      event.request.url.includes('fonts.gstatic.com') ||
-      event.request.url.includes('images.unsplash.com')) {
+  // Always fetch fresh for HTML, JS, CSS
+  if (event.request.destination === 'document' || 
+      event.request.url.endsWith('.js') || 
+      event.request.url.endsWith('.css') ||
+      event.request.url.includes('index.html')) {
     event.respondWith(
-      caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(event.request).then((cached) => {
-          const fetched = fetch(event.request).then((response) => {
-            if (response && response.status === 200) {
-              cache.put(event.request, response.clone());
-            }
-            return response;
-          }).catch(() => cached);
-          return cached || fetched;
-        });
-      })
+      fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
 
+  // Cache-first for images and CDN resources
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        if (response && response.status === 200 && event.request.method === 'GET') {
+      const fetched = fetch(event.request).then((response) => {
+        if (response && response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
           });
         }
         return response;
-      });
-    }).catch(() => {
-      if (event.request.destination === 'document') {
-        return caches.match('/index.html');
-      }
+      }).catch(() => cached);
+      return cached || fetched;
     })
   );
 });
