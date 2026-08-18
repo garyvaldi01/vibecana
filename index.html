@@ -166,7 +166,7 @@
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        var useState=React.useState,useEffect=React.useEffect,useMemo=useMemo,useRef=useRef;
+        var useState=React.useState,useEffect=React.useEffect,useMemo=React.useMemo,useRef=React.useRef;
         if("serviceWorker"in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
 
         /* ===== FIREBASE ===== */
@@ -605,7 +605,7 @@
                         React.createElement("p",{className:"text-4xl mb-3"},"\u2764\ufe0f"),
                         React.createElement("h3",{className:"text-lg font-bold text-white mb-2"},"Sin favoritos"),
                         React.createElement("p",{className:"text-gray-500 text-sm mb-4"},"Guarda tus lugares favoritos"),
-                        React.createElement("a",{href:"#/explore",className:"btn-primary inline-block px-6"},Explorar)
+                        React.createElement("a",{href:"#/explore",className:"btn-primary inline-block px-6"},"Explorar")
                     )
                     : React.createElement("div",{className:"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"},
                         favs.map(function(pl){
@@ -928,7 +928,7 @@
                             React.createElement("div",{className:"grid grid-cols-2 sm:grid-cols-4 gap-3"},
                                 [{k:"isNew",l:"Nuevo"},{k:"isPop",l:"Popular"},{k:"isFeat",l:"Destacado"},{k:"isVer",l:"Verificado"}].map(function(b){
                                     return React.createElement("label",{key:b.k,className:"flex items-center gap-2 p-3 rounded-xl cursor-pointer pill",style:{background:editing[b.k]?"rgba(255,107,53,.1)":"rgba(255,255,255,.03)",border:"1px solid "+(editing[b.k]?"rgba(255,107,53,.3)":"rgba(255,255,255,.06)")}},
-                                        React.createElement("input",{type:"checkbox",checked:editing[b.k],onChange:function(e){setEditing(Object.assign({},editing,{} ))},className:"hidden"}),
+                                        React.createElement("input",{type:"checkbox",checked:editing[b.k],onChange:function(){var obj=Object.assign({},editing);obj[b.k]=!obj[b.k];setEditing(obj)},className:"hidden"}),
                                         React.createElement("span",{className:"w-4 h-4 rounded flex items-center justify-center text-xs",style:{background:editing[b.k]?"#FF6B35":"rgba(255,255,255,.1)",color:"#fff"}},editing[b.k]?"\u2713":""),
                                         React.createElement("span",{className:"text-xs text-gray-300"},b.l)
                                     )
