@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="VIBE CANA - Los mejores lugares de Punta Cana. Ofertas, promociones y experiencias exclusivas.">
+    <meta name="theme-color" content="#050508">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VIBE CANA">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta property="og:title" content="VIBE CANA">
+    <meta property="og:description" content="Los mejores lugares de Punta Cana.">
+    <meta property="og:type" content="website">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.svg">
+    <title>VIBE CANA</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { DEFAULT: '#050508', card: '#0c0c12', surface: '#111118', elevated: '#1a1a24' },
+                        accent: { DEFAULT: '#e84545', warm: '#f59e0b', teal: '#14b8a6', violet: '#8b5cf6' },
+                        gold: { DEFAULT: '#d4a853', light: '#f0d68a' }
+                    },
+                    fontFamily: {
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+                        display: ['Playfair Display', 'Georgia', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        html{scroll-behavior:smooth}
+        body{font-family:'DM Sans',system-ui,sans-serif;background:#050508;color:#e5e7eb;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+        ::-webkit-scrollbar{width:3px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:rgba(232,69,69,.25);border-radius:99px}
+
+        /* ===== HERO ===== */
+        .hero{position:relative;width:100%;height:100dvh;overflow:hidden;background:#000}
+        .hero video{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform:translate(-50%,-50%) scale(1.05);object-fit:cover;filter:brightness(.4) saturate(1.3)}
+        .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,8,.1) 0%,rgba(5,5,8,0) 30%,rgba(5,5,8,.6) 65%,#050508 100%)}
+        .hero-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 20%,rgba(5,5,8,.8) 100%)}
+        .hero-grain{position:absolute;inset:0;opacity:.04;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+        /* ===== TYPOGRAPHY ===== */
+        .grad{background:linear-gradient(135deg,#e84545 0%,#f59e0b 50%,#14b8a6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .gold-text{color:#d4a853}
+
+        /* ===== GLASS ===== */
+        .glass{background:rgba(5,5,8,.65);backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);border:1px solid rgba(255,255,255,.05)}
+        .glass-card{background:rgba(12,12,18,.8);backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,.04);border-radius:24px;overflow:hidden}
+        .glass-card:hover{border-color:rgba(232,69,69,.12);background:rgba(12,12,18,.9)}
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes heroIn{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(232,69,69,.1),0 0 60px rgba(232,69,69,.03)}50%{box-shadow:0 0 40px rgba(232,69,69,.18),0 0 80px rgba(232,69,69,.06)}}
+        @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+        @keyframes countUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes scrollHint{0%,100%{transform:translateX(-50%) translateY(0);opacity:.7}50%{transform:translateX(-50%) translateY(12px);opacity:.3}}
+        @keyframes particleFloat{0%{transform:translateY(100vh) rotate(0deg);opacity:0}10%{opacity:.6}90%{opacity:.6}100%{transform:translateY(-10vh) rotate(360deg);opacity:0}}
+        @keyframes slideInRight{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes slideInLeft{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
+
+        .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+        .reveal.visible{opacity:1;transform:translateY(0)}
+        .reveal-scale{opacity:0;transform:scale(.9);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
+        .reveal-scale.visible{opacity:1;transform:scale(1)}
+        .stagger .reveal:nth-child(1){transition-delay:0s}
+        .stagger .reveal:nth-child(2){transition-delay:.08s}
+        .stagger .reveal:nth-child(3){transition-delay:.16s}
+        .stagger .reveal:nth-child(4){transition-delay:.24s}
+        .stagger .reveal:nth-child(5){transition-delay:.32s}
+        .stagger .reveal:nth-child(6){transition-delay:.4s}
+
+        .skeleton{background:linear-gradient(90deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.06) 50%,rgba(255,255,255,.03) 100%);background-size:200% 100%;animation:shimmer 2s infinite;border-radius:16px}
+        .img-lazy{opacity:0;transition:opacity .7s cubic-bezier(.16,1,.3,1)}.img-lazy.loaded{opacity:1}
+
+        /* ===== CARDS ===== */
+        .card{background:#0c0c12;border:1px solid rgba(255,255,255,.03);border-radius:20px;overflow:hidden;transition:all .4s cubic-bezier(.16,1,.3,1);position:relative}
+        .card::before{content:'';position:absolute;inset:0;border-radius:20px;opacity:0;transition:opacity .4s;background:linear-gradient(135deg,rgba(232,69,69,.06) 0%,transparent 60%);pointer-events:none;z-index:1}
+        .card:active{transform:scale(.98)}
+        @media(hover:hover){.card:hover{transform:translateY(-6px) scale(1.01);box-shadow:0 24px 60px -12px rgba(232,69,69,.15)}.card:hover::before{opacity:1}}
+
+        /* ===== BUTTONS ===== */
+        .btn-primary{background:linear-gradient(135deg,#e84545 0%,#c62828 100%);color:#fff;font-weight:700;padding:16px 28px;border-radius:16px;border:none;cursor:pointer;font-size:15px;font-family:inherit;transition:all .3s cubic-bezier(.16,1,.3,1);width:100%;position:relative;overflow:hidden;letter-spacing:.02em}
+        .btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,transparent 50%);opacity:0;transition:opacity .3s}
+        .btn-primary:active{transform:scale(.97)}
+        @media(hover:hover){.btn-primary:hover{box-shadow:0 8px 32px -4px rgba(232,69,69,.4);transform:translateY(-1px)}.btn-primary:hover::after{opacity:1}}
+
+        .btn-ghost{background:rgba(255,255,255,.04);color:#d1d5db;font-weight:600;padding:14px 22px;border-radius:14px;border:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:14px;font-family:inherit;transition:all .3s}
+        .btn-ghost:active{transform:scale(.97);background:rgba(255,255,255,.07)}
+
+        /* ===== INPUTS ===== */
+        .input{background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.06);border-radius:16px;padding:15px 18px;color:#f3f4f6;font-size:15px;width:100%;transition:all .3s cubic-bezier(.16,1,.3,1);outline:none;font-family:inherit}
+        .input:focus{border-color:#e84545;background:rgba(255,255,255,.05);box-shadow:0 0 0 4px rgba(232,69,69,.08)}
+        .input::placeholder{color:#4b5563}
+
+        /* ===== BADGES ===== */
+        .badge{font-size:10px;font-weight:700;padding:5px 12px;border-radius:99px;letter-spacing:.06em;text-transform:uppercase;display:inline-block}
+        .badge-new{background:linear-gradient(135deg,rgba(16,185,129,.9),rgba(5,150,105,.9));color:#fff}
+        .badge-pop{background:linear-gradient(135deg,rgba(232,69,69,.9),rgba(220,38,38,.9));color:#fff}
+        .badge-feat{background:linear-gradient(135deg,rgba(245,158,11,.9),rgba(217,119,6,.9));color:#1a1a1a}
+        .badge-verified{background:linear-gradient(135deg,rgba(99,102,241,.9),rgba(79,70,229,.9));color:#fff}
+        .badge-promo{background:linear-gradient(135deg,#e84545,#f59e0b);color:#fff;box-shadow:0 4px 16px rgba(232,69,69,.3)}
+
+        .star{color:#f59e0b}.star-dim{color:#1f2937}
+        .price-on{color:#f59e0b}.price-off{color:#1f2937}
+
+        /* ===== NAV ===== */
+        .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+        .scroll-x::-webkit-scrollbar{display:none}
+        .bottom-nav{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+        .pill{transition:all .25s cubic-bezier(.34,1.56,.64,1)}.pill:active{transform:scale(.93)}
+        .phone-input:focus{box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+        .code-input{letter-spacing:0.3em;font-size:1.5rem;text-align:center;font-family:'DM Mono',monospace}
+
+        /* ===== MARQUEE ===== */
+        .marquee{display:flex;gap:2rem;animation:marquee 40s linear infinite;width:max-content}
+
+        /* ===== NUMBER ===== */
+        .num{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1}
+
+        /* ===== SECTION DIVIDER ===== */
+        .divider{height:1px;max-width:160px;margin:0 auto;background:linear-gradient(90deg,transparent,rgba(232,69,69,.3),transparent)}
+
+        /* ===== MAP ===== */
+        .leaflet-container{background:#050508!important}
+        .leaflet-tile-pane{filter:brightness(.65) contrast(1.2) saturate(.25) hue-rotate(180deg) invert(1)}
+        .leaflet-control-zoom{border:none!important}
+        .leaflet-control-zoom a{background:rgba(12,12,18,.9)!important;color:#e5e7eb!important;border:1px solid rgba(255,255,255,.06)!important;backdrop-filter:blur(12px)}
+        .leaflet-control-attribution{background:rgba(5,5,8,.7)!important;color:#4b5563!important;font-size:8px!important}
+        .leaflet-control-attribution a{color:#6b7280!important}
+        .marker-pin{width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(232,69,69,.35);background:linear-gradient(135deg,#e84545,#c62828)}
+        .marker-pin span{transform:rotate(45deg);font-size:14px}
+        .map-wrap{border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.04)}
+
+        /* ===== PARTICLES ===== */
+        .particle{position:absolute;width:2px;height:2px;background:rgba(232,69,69,.4);border-radius:50%;animation:particleFloat linear infinite;pointer-events:none}
+
+        /* ===== MOBILE ===== */
+        @media(max-width:640px){.hero h1{font-size:clamp(2.8rem,13vw,4.5rem)}}
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        var useState=React.useState,useEffect=React.useEffect,useMemo=React.useMemo,useRef=React.useRef;
+        if("serviceWorker"in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+
+        /* ===== FIREBASE ===== */
+        var fbConfig={apiKey:"AIzaSyBksk00Bqu7oHvcKEb4DniYjPGLxxQGgBw",authDomain:"vibecana-e938d.firebaseapp.com",projectId:"vibecana-e938d",storageBucket:"vibecana-e938d.firebasestorage.app",messagingSenderId:"808944486921",appId:"1:808944486921:web:65de43eefdfb0b5f9606d8"};
+        firebase.initializeApp(fbConfig);
+        var fbAuth=firebase.auth();
+        var googleProvider=new firebase.auth.GoogleAuthProvider();
+        var facebookProvider=new firebase.auth.FacebookAuthProvider();
+        var appleProvider=new firebase.auth.OAuthProvider('apple.com');
+
+        function useAuth(){
+            var s=useState(null),user=s[0],setUser=s[1];
+            var s2=useState(true),loading=s2[0],setLoading=s2[1];
+            useEffect(function(){
+                var unsub=fbAuth.onAuthStateChanged(function(u){setUser(u);setLoading(false)});
+                return function(){unsub()}
+            },[]);
+            return{user:user,loading:loading}
+        }
+
+        function loginWithGoogle(){
+            return fbAuth.signInWithPopup(googleProvider).then(function(result){return result.user})
+        }
+        function loginWithFacebook(){
+            return fbAuth.signInWithPopup(facebookProvider).then(function(result){return result.user})
+        }
+        function loginWithApple(){
+            return fbAuth.signInWithPopup(appleProvider).then(function(result){return result.user})
+        }
+        function loginWithEmail(email,pass){
+            return fbAuth.signInWithEmailAndPassword(email,pass)
+        }
+        function registerWithEmail(email,pass,name){
+            return fbAuth.createUserWithEmailAndPassword(email,pass).then(function(result){
+                return result.user.updateProfile({displayName:name})
+            })
+        }
+        function sendPhoneVerification(phoneNumber,recaptchaVerifier){
+            return fbAuth.signInWithPhoneNumber(phoneNumber,recaptchaVerifier)
+        }
+        function logout(){
+            return fbAuth.signOut()
+        }
+
+        /* ===== HOOKS ===== */
+        function useReveal(opts){
+            opts=opts||{};
+            var ref=useRef(null);
+            useEffect(function(){
+                var el=ref.current;if(!el)return;
+                var o=new IntersectionObserver(function(e){
+                    if(e[0].isIntersecting){el.classList.add("visible");if(!opts.repeat)o.unobserve(el)}
+                },{threshold:opts.threshold||.1,rootMargin:"0px 0px -40px 0px"});
+                o.observe(el);return function(){o.disconnect()}
+            },[]);return ref
+        }
+
+        function useCounter(target,dur){
+            dur=dur||2000;var s=useState(0),count=s[0],setCount=s[1];
+            var ref=useRef(null),started=useRef(false);
+            useEffect(function(){
+                var el=ref.current;if(!el)return;
+                var o=new IntersectionObserver(function(e){
+                    if(e[0].isIntersecting&&!started.current){
+                        started.current=true;var st=performance.now();
+                        (function tick(now){
+                            var p=Math.min((now-st)/dur,1);
+                            setCount(Math.round((1-Math.pow(1-p,3))*target));
+                            if(p<1)requestAnimationFrame(tick)
+                        })(st)
+                    }
+                },{threshold:.5});
+                o.observe(el);return function(){o.disconnect()}
+            },[target]);return[count,ref]
+        }
+
+        function useHash(){
+            var s=useState(window.location.hash||"#/"),h=s[0],setH=s[1];
+            useEffect(function(){
+                var fn=function(){setH(window.location.hash||"#/")};
+                window.addEventListener("hashchange",fn);return function(){window.removeEventListener("hashchange",fn)}
+            },[]);return h
+        }
+
+        /* ===== UTILS ===== */
+        function gs(k,fb){try{var v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch(e){return fb}}
+        function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+        function go(p){window.location.hash=p;window.scrollTo({top:0,behavior:"smooth"})}
+        function fp(p){return p?p.replace(/(\d{1})(\d{3})(\d{3})(\d{4})/,"+$1 ($2) $3-$4"):""}
+
+        /* ===== COMPONENTS ===== */
+        function Stars(p){
+            var full=Math.floor(p.rating),half=p.rating%1>=.5,sz=p.size==="lg"?"text-lg":"text-sm";
+            return React.createElement("span",{className:"flex items-center gap-1 "+sz},
+                [0,1,2,3,4].map(function(i){
+                    var on=i<full||(i===full&&half);
+                    return React.createElement("span",{key:i,className:on?"star":"star-dim"},on?"\u2605":"\u2606")
+                }),
+                React.createElement("span",{className:"text-gray-400 font-semibold ml-1 text-sm"},p.rating)
+            )
+        }
+        function Price(p){
+            return React.createElement("span",{className:"text-sm font-semibold tracking-wide"},
+                [1,2,3,4].map(function(i){return React.createElement("span",{key:i,className:i<=p.level?"price-on":"price-off"},"$")})
+            )
+        }
+        function Badge(p){
+            var m={new:{c:"badge-new",l:"Nuevo"},pop:{c:"badge-pop",l:"Popular"},feat:{c:"badge-feat",l:"Destacado"},verified:{c:"badge-verified",l:"\u2713 Verificado"},promo:{c:"badge-promo",l:"PROMO"}};
+            var b=m[p.type];if(!b)return null;
+            return React.createElement("span",{className:"badge "+b.c},b.l)
+        }
+        function Reveal(p){
+            var ref=useReveal();
+            var dc=p.direction==="scale"?"reveal-scale":"reveal";
+            return React.createElement("div",{ref:ref,className:dc+" "+(p.className||""),style:{transitionDelay:(p.delay||0)+"s"}},p.children)
+        }
+        function LazyImg(p){
+            var ref=useRef(null),s=useState(false),loaded=s[0],setLoaded=s[1];
+            useEffect(function(){
+                var el=ref.current;if(!el)return;
+                var o=new IntersectionObserver(function(e){
+                    if(e[0].isIntersecting){var img=new Image();img.onload=function(){setLoaded(true)};img.src=p.src;o.disconnect()}
+                },{rootMargin:"200px"});
+                o.observe(el);return function(){o.disconnect()}
+            },[p.src]);
+            return React.createElement("div",{ref:ref,className:"relative overflow-hidden",style:p.style},
+                !loaded&&React.createElement("div",{className:"skeleton absolute inset-0"}),
+                loaded&&React.createElement("img",{src:p.src,alt:p.alt,className:(p.className||"")+" img-lazy loaded",loading:"lazy"})
+            )
+        }
+        function LMap(p){
+            var ref=useRef(null),inst=useRef(null);
+            useEffect(function(){
+                if(!ref.current||inst.current)return;
+                var m=L.map(ref.current,{center:p.center,zoom:p.zoom||15,zoomControl:false,scrollWheelZoom:false});
+                L.control.zoom({position:"bottomright"}).addTo(m);
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"OSM"}).addTo(m);
+                var ic=L.divIcon({className:"cm",html:'<div class="marker-pin"><span>\ud83d\udccd</span></div>',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-40]});
+                (p.markers||[]).forEach(function(mk){
+                    var mr=L.marker([mk.lat,mk.lng],{icon:ic}).addTo(m);
+                    if(mk.popup)mr.bindPopup(mk.popup);
+                    if(p.onClick)mr.on("click",function(){p.onClick(mk)})
+                });
+                if((p.markers||[]).length>1)m.fitBounds(p.markers.map(function(mk){return[mk.lat,mk.lng]}),{padding:[40,40]});
+                inst.current=m;setTimeout(function(){m.invalidateSize()},300);
+                return function(){m.remove();inst.current=null}
+            },[p.center,p.zoom]);
+            return React.createElement("div",{ref:ref,style:{height:p.height||"300px"},className:"map-wrap "+(p.className||"")})
+        }
+
+        /* ===== DATA ===== */
+        var CAT=[
+            {id:"restaurantes",name:"Restaurantes",icon:"\ud83c\udf7d\ufe0f",color:"#e84545"},
+            {id:"rooftops",name:"Rooftops",icon:"\ud83c\udf78",color:"#8b5cf6"},
+            {id:"bares",name:"Bares",icon:"\ud83c\udf7a",color:"#f59e0b"},
+            {id:"cerveza",name:"Cervecer\u00edas",icon:"\ud83c\udf7b",color:"#d97706"},
+            {id:"beach-clubs",name:"Beach Clubs",icon:"\ud83c\u3ddf\ufe0f",color:"#14b8a6"},
+            {id:"musica",name:"M\u00fasica en Vivo",icon:"\ud83c\udfb6",color:"#ec4899"},
+            {id:"nightlife",name:"Nightlife",icon:"\ud83c\udf19",color:"#6366f1"},
+            {id:"romantico",name:"Rom\u00e1ntico",icon:"\ud83d\udc95",color:"#f43f5e"},
+            {id:"cafe",name:"Caf\u00e9s",icon:"\u2615",color:"#92400e"},
+            {id:"nuevos",name:"Nuevos",icon:"\u2728",color:"#10b981"}
+        ];
+        var ZN=[
+            {id:"punta-cana",name:"Punta Cana",em:"\ud83c\udf34",lat:18.582,lng:-68.404},
+            {id:"bavaro",name:"B\u00e1varo",em:"\ud83c\u3ddf\ufe0f",lat:18.682,lng:-68.414},
+            {id:"downtown",name:"Downtown",em:"\ud83c\udf05",lat:18.562,lng:-68.394},
+            {id:"el-cortecito",name:"El Cortecito",em:"\ud83c\udfa3",lat:18.672,lng:-68.424},
+            {id:"veron",name:"Ver\u00f3n",em:"\ud83c\udf3f",lat:18.642,lng:-68.444},
+            {id:"cap-cana",name:"Cap Cana",em:"\u26f5",lat:18.462,lng:-68.394}
+        ];
+        var PL=[
+            {id:"1",name:"La Yola",slug:"la-yola",desc:"Ic\u00f3nico restaurante de mariscos en la Puntacana Resort Marina. Cocina caribe\u00f1a frente al oc\u00e9ano.",cat:"restaurantes",zone:"cap-cana",addr:"Puntacana Resort Marina",lat:18.568,lng:-68.386,price:4,rating:4.8,phone:"+18099591010",wa:"18099591010",ig:"@layolapuntacana",img:"https://images.unsplash.com/photo-1544124499-58912cbddaad?w=800&q=80",gallery:["https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80"],hours:"17:45 \u2013 22:30",isNew:false,isPop:true,isFeat:true,isVer:true,active:true,promo:"Cena para 2 por $89"},
+            {id:"2",name:"Drago Grill",slug:"drago-grill",desc:"Parrilla argentina premium en Cap Cana. Cortes selectos, vinos importados y ambiente elegante.",cat:"restaurantes",zone:"cap-cana",addr:"Boulevard Fishing Lodge 101",lat:18.462,lng:-68.382,price:4,rating:4.5,phone:"+18494731919",wa:"18494731919",ig:"@drago.grill",img:"https://images.unsplash.com/photo-1558030006-450675393462?w=800&q=80",gallery:[],hours:"12:00 \u2013 23:00",isNew:false,isPop:true,isFeat:true,isVer:true,active:true,promo:"2x1 en cortes todos los martes"},
+            {id:"3",name:"Terra Negra",slug:"terra-negra",desc:"Mexican cantina con tacos, margaritas y karaoke. Ambiente vibrante en Downtown.",cat:"restaurantes",zone:"downtown",addr:"Downtown Punta Cana",lat:18.573,lng:-68.412,price:2,rating:4.7,phone:"+18494601512",wa:"18494601512",ig:"@terranegrapuntacana",img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80",gallery:[],hours:"09:00 \u2013 01:00",isNew:false,isPop:true,isFeat:false,isVer:true,active:true,promo:"Taco Tuesday: 3x1 en tacos + margarita gratis"},
+            {id:"4",name:"Jellyfish Restaurant",slug:"jellyfish",desc:"Restaurante de playa frente a B\u00e1varo. Mariscos frescos y c\u00f3cteles tropicales.",cat:"restaurantes",zone:"bavaro",addr:"Calle Chicago, Playa B\u00e1varo",lat:18.684,lng:-68.404,price:3,rating:4.3,phone:"+18095511451",wa:"18095511451",ig:"@jellyfishrestaurant",img:"https://images.unsplash.com/photo-1559339352-11d035aa62de?w=800&q=80",gallery:[],hours:"07:00 \u2013 00:00",isNew:false,isPop:true,isFeat:false,isVer:true,active:true,promo:"Brunch dominical buffet por $35"},
+            {id:"5",name:"Barbudo Restaurant",slug:"barbudo",desc:"Carnes a la parrilla y mariscos en el Fishing Lodge de Cap Cana.",cat:"restaurantes",zone:"cap-cana",addr:"Fishing Lodge, Cap Cana",lat:18.458,lng:-68.38,price:4,rating:4.6,phone:"+18092407440",wa:"18092407440",ig:"@barbudorestaurant",img:"https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=800&q=80",gallery:[],hours:"12:00 \u2013 23:00",isNew:true,isPop:false,isFeat:false,isVer:true,active:true,promo:"Cena rom\u00e1ntica con vino incluido $120"},
+            {id:"6",name:"Coco Bongo Rooftop",slug:"coco-bongo-rooftop",desc:"Rooftop del ic\u00f3nico Coco Bongo. C\u00f3cteles premium y vista panor\u00e1mica.",cat:"rooftops",zone:"downtown",addr:"La Castellana, Downtown",lat:18.575,lng:-68.415,price:3,rating:4.4,phone:"+18093239090",wa:"18093239090",ig:"@cocobongoshow",img:"https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&q=80",gallery:[],hours:"18:00 \u2013 02:00",isNew:false,isPop:true,isFeat:true,isVer:true,active:true,promo:"Happy hour 2x1 de 6-8pm"},
+            {id:"7",name:"Quimera Rooftop",slug:"quimera-rooftop",desc:"Rooftop exclusivo en B\u00e1varo con vista al pool y DJ sets.",cat:"rooftops",zone:"bavaro",addr:"Hotel Barcel\u00f3 B\u00e1varo",lat:18.688,lng:-68.41,price:4,rating:4.0,phone:"+18095527000",wa:"18095527000",ig:"@quimerarooftop",img:"https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&q=80",gallery:[],hours:"17:00 \u2013 01:00",isNew:true,isPop:false,isFeat:false,isVer:true,active:true,promo:"Sunset cocktails: 2x1 de 5-7pm"},
+            {id:"8",name:"WAVE Rooftop",slug:"wave-rooftop",desc:"Piscina infinita, barra de sushi y atardeceres espectaculares.",cat:"rooftops",zone:"punta-cana",addr:"Whala!Hotel, Piso 8",lat:18.59,lng:-68.4,price:3,rating:4.5,phone:"+18096957000",wa:"18096957000",ig:"@waverooftop",img:"https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80",gallery:[],hours:"16:00 \u2013 00:00",isNew:false,isPop:true,isFeat:false,isVer:true,active:true,promo:"All you can drink sushi + c\u00f3cteles $55"},
+            {id:"9",name:"Onno\u2019s B\u00e1varo",slug:"onnos-bavaro",desc:"Beach bar en Playa B\u00e1varo. Mojitos legendarios y fiesta playa.",cat:"bares",zone:"bavaro",addr:"Playa B\u00e1varo",lat:18.678,lng:-68.418,price:2,rating:4.6,phone:"+18095529090",wa:"18095529090",ig:"@onnosbavaro",img:"https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&q=80",gallery:[],hours:"10:00 \u2013 02:00",isNew:false,isPop:true,isFeat:true,isVer:true,active:true,promo:"Mojitos gratis con cada plato"},
+            {id:"10",name:"Soles Chill Out",slug:"soles-chill-out",desc:"Bar de playa en Los Corales. Atardeceres y c\u00f3cteles tropicales.",cat:"bares",zone:"bavaro",addr:"Los Corales Beach",lat:18.686,lng:-68.42,price:2,rating:4.5,phone:"+18095527800",wa:"18095527800",ig:"@soleschillout",img:"https://images.unsplash.com/photo-1560512823-829485b8bf24?w=800&q=80",gallery:[],hours:"10:00 \u2013 23:00",isNew:false,isPop:true,isFeat:false,isVer:true,active:true,promo:"Beer bucket 6 por el precio de 4"},
+            {id:"11",name:"CasaRemedio",slug:"casaremedio",desc:"Speakeasy de c\u00f3cteles de autor. Mixolog\u00eda premium y jazz en vivo.",cat:"bares",zone:"downtown",addr:"Av. Independencia #15",lat:18.574,lng:-68.408,price:3,rating:4.9,phone:"+18095551111",wa:"18095551111",ig:"@casaremedio",img:"https://images.unsplash.com/photo-1574028244289-93dfc0ade138?w=800&q=80",gallery:[],hours:"18:00 \u2013 02:00",isNew:true,isPop:false,isFeat:false,isVer:true,active:true,promo:"Cocktail tasting menu 5 copas por $40"},
+            {id:"12",name:"Maestro Beer Garden",slug:"maestro-beer",desc:"Beer garden artesanal. 20+ grifos, street food y m\u00fasica indie.",cat:"cerveza",zone:"downtown",addr:"Calle Restauraci\u00f3n #28",lat:18.576,lng:-68.41,price:2,rating:4.9,phone:"+18095552222",wa:"18095552222",ig:"@maestrobeer",img:"https://images.unsplash.com/photo-1559526642-c3f001ea68ee?w=800&q=80",gallery:[],hours:"16:00 \u2013 01:00",isNew:false,isPop:true,isFeat:false,isVer:true,active:true,promo:"Lunes: todas las cervezas a mitad de precio"},
+            {id:"13",name:"Playa Blanca",slug:"playa-blanca",desc:"Beach club exclusivo. Mariscos frescos y arena blanca paradisíaca.",cat:"beach-clubs",zone:"cap-cana",addr:"Puntacana Resort",lat:18.566,lng:-68.388,price:4,rating:4.4,phone:"+18099592266",wa:"18099592266",ig:"@playablancapuntacana",img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",gallery:[],hours:"10:00 \u2013 18:00",isNew:false,isPop:true,isFeat:true,isVer:true,active:true,promo:"Daypass + almuerzo + 2 tragos"},
+            {id:"14",name:"Pearl Beach Club",slug:"pearl-beach",desc:"Beach club de lujo en Cabeza de Toro. Playa privada y restaurante.",cat:"beach-clubs",zone:"bavaro",addr:"Cabeza de Toro",lat:18.696,lng:-68.398,price:4,rating:4.9,phone:"+18092211000",wa:"18092211000",ig:"@pearlbeachclub",img:"https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&q=80",gallery:[],hours:"10:00 \u2013 22:00",isNew:false,isPop:true,isFeat:true,isVer:true,active:true,promo:"VIP daypass con cena incluida $95"},
+            {id:"15",name:"Eden Roc Beach Club",slug:"eden-roc",desc:"Beach club 5 estrellas en Cap Cana. Servicio de clase mundial.",cat:"beach-clubs",zone:"cap-cana",addr:"Boulevard Cap Cana",lat:18.454,lng:-68.376,price:4,rating:4.8,phone:"+18094697469",wa:"18094697469",ig:"@edenroccapcana",img:"https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&q=80",gallery:[],hours:"07:00 \u2013 23:00",isNew:false,isPop:true,isFeat:false,isVer:true,active:true,promo:"Brunch de lujo con champ\u00e1ns gratis"},
+            {id:"16",name:"Coco Bongo",slug:"cocobongo",desc:"El show nocturno m\u00e1s ic\u00f3nico. Espect\u00e1culos, baile y open bar.",cat:"nightlife",zone:"downtown",addr:"La Castellana, Downtown",lat:18.5755,lng:-68.4155,price:3,rating:4.4,phone:"+18093239090",wa:"18093239090",ig:"@cocobongoshow",img:"https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=800&q=80",gallery:[],hours:"22:30 \u2013 03:30",isNew:false,isPop:true,isFeat:true,isVer:true,active:true,promo:"Entrada + open bar desde $90"},
+            {id:"17",name:"ORO Nightclub",slug:"oro-nightclub",desc:"Nightclub de lujo en Hard Rock. DJs internacionales y zona VIP.",cat:"nightlife",zone:"bavaro",addr:"Hard Rock Hotel",lat:18.69,lng:-68.406,price:4,rating:4.5,phone:"+18097547095",wa:"18097547095",ig:"@oronightclub",img:"https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80",gallery:[],hours:"23:00 \u2013 04:00",isNew:false,isPop:true,isFeat:true,isVer:true,active:true,promo:"Ladies free antes de medianoche"},
+            {id:"18",name:"Huracan Cafe",slug:"huracan-cafe",desc:"Beachfront con m\u00fasica en vivo. Salsa, bachata y merengue.",cat:"musica",zone:"bavaro",addr:"Playa B\u00e1varo",lat:18.682,lng:-68.416,price:3,rating:4.5,phone:"+18095528080",wa:"18095528080",ig:"@huracancafe",img:"https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80",gallery:[],hours:"11:00 \u2013 02:00",isNew:false,isPop:true,isFeat:false,isVer:true,active:true,promo:"Noche de salsa: entrada + 2 tragos $25"},
+            {id:"19",name:"SBG Coffee",slug:"sbg-coffee",desc:"Cafeter\u00eda de especialidad. Caf\u00e9 dominicano y brunch artesanal.",cat:"cafe",zone:"bavaro",addr:"Los Corales",lat:18.685,lng:-68.422,price:2,rating:4.7,phone:"+18095553333",wa:"18095553333",ig:"@sbgcoffee",img:"https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80",gallery:[],hours:"07:00 \u2013 21:00",isNew:true,isPop:false,isFeat:false,isVer:true,active:true,promo:"Caf\u00e9 + pastry por $5"},
+            {id:"20",name:"Dinner in the Sky",slug:"dinner-sky",desc:"Cenar 50 metros sobre el suelo con vistas panor\u00e1micas.",cat:"romantico",zone:"punta-cana",addr:"Punta Cana Village",lat:18.578,lng:-68.396,price:4,rating:4.8,phone:"+18095554444",wa:"18095554444",ig:"@dinnerintheskypc",img:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",gallery:[],hours:"18:00 \u2013 22:00",isNew:false,isPop:true,isFeat:true,isVer:true,active:true,promo:"2x1 los mi\u00e9rcoles"},
+            {id:"21",name:"NOVA Beach Club",slug:"nova-beach",desc:"Beach club con piscina infinity y fiesta playa.",cat:"beach-clubs",zone:"bavaro",addr:"Playa B\u00e1varo",lat:18.692,lng:-68.428,price:3,rating:4.6,phone:"+18095555555",wa:"18095555555",ig:"@novabeachclub",img:"https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&q=80",gallery:[],hours:"10:00 \u2013 20:00",isNew:true,isPop:true,isFeat:false,isVer:true,active:true,promo:"Fiesta playa: open bar 3 horas por $45"},
+            {id:"22",name:"Cana Bay Beach Club",slug:"cana-bay",desc:"Beach club con 11,000 m2 y piscina ol\u00edmpica.",cat:"beach-clubs",zone:"bavaro",addr:"Cana Bay",lat:18.694,lng:-68.43,price:3,rating:4.5,phone:"+18095556666",wa:"18095556666",ig:"@canabay",img:"https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&q=80",gallery:[],hours:"09:00 \u2013 21:00",isNew:true,isPop:false,isFeat:false,isVer:true,active:true,promo:"Ni\u00f1os gratis con cada adulto"},
+            {id:"23",name:"Little John Bar",slug:"little-john",desc:"Bar de playa relajado. Cervezas fr\u00edas y m\u00fasica reggae.",cat:"bares",zone:"bavaro",addr:"Los Corales Beach",lat:18.687,lng:-68.421,price:1,rating:4.3,phone:"+18095558888",wa:"18095558888",ig:"@littlejohnbar",img:"https://images.unsplash.com/photo-1560512823-829485b8bf24?w=800&q=80",gallery:[],hours:"10:00 \u2013 22:00",isNew:false,isPop:false,isFeat:false,isVer:true,active:true,promo:"Jarra de 1L por precio de media"},
+            {id:"24",name:"Zoho Beach Club",slug:"zoho-beach",desc:"Beach club con electr\u00f3nica, daybeds y fus\u00f3n asi\u00e1tica.",cat:"beach-clubs",zone:"bavaro",addr:"Playa B\u00e1varo",lat:18.698,lng:-68.432,price:3,rating:4.4,phone:"+18095557777",wa:"18095557777",ig:"@zohobeachclub",img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",gallery:[],hours:"10:00 \u2013 19:00",isNew:true,isPop:false,isFeat:false,isVer:true,active:true,promo:"Pool party: entrada + 3 tragos $35"}
+        ];
+
+        /* ===== NAVBAR ===== */
+        function Navbar(p){
+            var os=useState(false),open=os[0],setOpen=os[1];
+            var os2=useState(false),scrolled=os2[0],setScrolled=os2[1];
+            var os3=useState(false),showMenu=os3[0],setShowMenu=os3[1];
+            useEffect(function(){
+                var h=function(){setScrolled(window.scrollY>50)};
+                window.addEventListener("scroll",h,{passive:true});return function(){window.removeEventListener("scroll",h)}
+            },[]);
+            var user=p.user;
+            var links=[{to:"#/",l:"Inicio"},{to:"#/explore",l:"Explorar"},{to:"#/zones",l:"Zonas"},{to:"#/business",l:"Negocios"}];
+            return React.createElement(React.Fragment,null,
+                React.createElement("header",{className:"fixed top-0 left-0 right-0 z-50 transition-all duration-700 "+(scrolled?"glass shadow-2xl shadow-black/30":"bg-transparent")},
+                    React.createElement("div",{className:"max-w-6xl mx-auto px-5 h-16 flex items-center justify-between"},
+                        React.createElement("a",{href:"#/"},
+                            React.createElement("div",{className:"flex items-center gap-3"},
+                                React.createElement("div",{className:"w-9 h-9 rounded-xl flex items-center justify-center",style:{background:"linear-gradient(135deg,#e84545,#f59e0b)",boxShadow:"0 4px 20px rgba(232,69,69,.3)"}},
+                                    React.createElement("span",{className:"text-white font-extrabold text-sm"},"V")
+                                ),
+                                React.createElement("span",{className:"font-display font-bold text-lg tracking-tight text-white"},"VIBE ",React.createElement("span",{className:"grad"},"CANA"))
+                            )
+                        ),
+                        React.createElement("nav",{className:"hidden md:flex items-center gap-1"},
+                            links.map(function(l){return React.createElement("a",{key:l.to,href:l.to,className:"px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 "+(p.route===l.to?"text-white bg-white/8":"text-gray-500 hover:text-white hover:bg-white/5")},l.l)})
+                        ),
+                        React.createElement("div",{className:"flex items-center gap-3"},
+                            user
+                                ? React.createElement("div",{className:"relative"},
+                                    React.createElement("button",{onClick:function(){setShowMenu(!showMenu)},className:"flex items-center gap-2 px-3 py-1.5 rounded-full pill",style:{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)"}},
+                                        user.photoURL
+                                            ? React.createElement("img",{src:user.photoURL,className:"w-7 h-7 rounded-full object-cover"})
+                                            : React.createElement("div",{className:"w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold",style:{background:"linear-gradient(135deg,#e84545,#f59e0b)",color:"#fff"}},user.displayName?user.displayName[0].toUpperCase():"U"}),
+                                        React.createElement("span",{className:"text-sm text-gray-300 hidden sm:inline"},user.displayName?user.displayName.split(" ")[0]:'Mi perfil')
+                                    ),
+                                    showMenu&&React.createElement("div",{className:"absolute right-0 top-full mt-2 w-56 glass-card p-2 z-50",style:{borderRadius:"16px"}},
+                                        React.createElement("div",{className:"px-3 py-2 mb-1 border-b border-white/5"},
+                                            React.createElement("p",{className:"text-white font-semibold text-sm truncate"},user.displayName||'Usuario'),
+                                            React.createElement("p",{className:"text-gray-500 text-xs truncate"},user.email||'')
+                                        ),
+                                        React.createElement("a",{href:"#/favorites",className:"flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/5 transition",onClick:function(){setShowMenu(false)}},"\u2764\ufe0f Favoritos"),
+                                        React.createElement("a",{href:"#/business",className:"flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-300 hover:bg-white/5 transition",onClick:function(){setShowMenu(false)}},"\ud83d\udcbc Mi negocio"),
+                                        React.createElement("button",{onClick:function(){logout();setShowMenu(false)},className:"w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition mt-1"},"\u2192 Cerrar sesi\u00f3n")
+                                    )
+                                )
+                                : React.createElement("a",{href:"#/login",className:"px-4 py-2 rounded-full text-sm font-semibold pill",style:{background:"linear-gradient(135deg,#e84545,#c62828)",color:"#fff"}},"Iniciar sesi\u00f3n")
+                        ),
+                        React.createElement("button",{className:"md:hidden w-10 h-10 flex items-center justify-center rounded-xl",onClick:function(){setOpen(!open)}},
+                            React.createElement("div",{className:"flex flex-col gap-1.5"},
+                                React.createElement("span",{className:"block w-5 h-0.5 bg-white transition-all duration-300 "+(open?"rotate-45 translate-y-2":"")}),
+                                React.createElement("span",{className:"block w-5 h-0.5 bg-white transition-all duration-300 "+(open?"opacity-0":"")}),
+                                React.createElement("span",{className:"block w-5 h-0.5 bg-white transition-all duration-300 "+(open?"-rotate-45 -translate-y-2":"")})
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        function BottomNav(p){
+            var tabs=[{to:"#/",i:"\ud83c\udfe0",l:"Inicio"},{to:"#/explore",i:"\ud83d\udd0d",l:"Explorar"},{to:"#/favorites",i:"\u2764\ufe0f",l:"Favoritos"},{to:"#/business",i:"\ud83d\udcbc",l:"Negocios"}];
+            return React.createElement("nav",{className:"fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/5 md:hidden bottom-nav safe-bottom"},
+                React.createElement("div",{className:"flex justify-around items-center h-16"},
+                    tabs.map(function(t){
+                        var a=p.route===t.to;
+                        return React.createElement("a",{key:t.to,href:t.to,className:"flex flex-col items-center gap-0.5 min-w-[64px]"},
+                            React.createElement("span",{className:"text-xl transition-all duration-300 "+(a?"scale-110 drop-shadow-lg":"opacity-50")},t.i),
+                            React.createElement("span",{className:"text-[10px] font-semibold transition-colors duration-300 "+(a?"text-white":"text-gray-600")},t.l)
+                        )
+                    })
+                )
+            )
+        }
+
+        /* ===== HERO ===== */
+        function Hero(p){
+            var places=p.places;
+            var q=useState(""),query=q[0],setQuery=q[1];
+            var z=useState(""),zone=z[0],setZone=z[1];
+            function doSearch(){
+                var u=new URLSearchParams();
+                if(query)u.set("q",query);if(zone)u.set("zone",zone);
+                go("/explore"+(u.toString()?"?"+u.toString():""))
+            }
+            return React.createElement("section",{className:"hero"},
+                React.createElement("video",{autoPlay:true,muted:true,loop:true,playsInline:true,poster:"https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=1920&q=80",style:{animation:"heroIn 2s ease forwards"}},
+                    React.createElement("source",{src:"https://videos.pexels.com/video-files/7271837/7271837-uhd_2560_1440_25fps.mp4",type:"video/mp4"})
+                ),
+                React.createElement("div",{className:"hero-overlay"}),
+                React.createElement("div",{className:"hero-vignette"}),
+                React.createElement("div",{className:"hero-grain"}),
+                React.createElement("div",{className:"relative z-10 max-w-3xl mx-auto text-center w-full px-5"},
+                    React.createElement("div",{className:"inline-flex items-center gap-2 px-5 py-2 rounded-full border border-white/10 text-xs text-gray-400 mb-8 backdrop-blur-md",style:{animation:"heroIn 1s ease .1s forwards",opacity:0,background:"rgba(255,255,255,.03)"}},
+                        React.createElement("span",{className:"pulse-dot"}),
+                        React.createElement("span",null,"Tu gu\u00eda exclusiva en Punta Cana")
+                    ),
+                    React.createElement("h1",{style:{animation:"heroIn 1.2s cubic-bezier(.16,1,.3,1) .3s forwards",opacity:0,transform:"translateY(40px) scale(.96)"},className:"font-display text-6xl sm:text-7xl md:text-8xl lg:text-[9rem] font-bold mb-4 leading-[0.85] tracking-tight"},
+                        "VIBE",React.createElement("br"),
+                        React.createElement("span",{className:"grad"},"CANA")
+                    ),
+                    React.createElement("p",{style:{animation:"heroIn 1.2s cubic-bezier(.16,1,.3,1) .6s forwards",opacity:0},className:"text-lg sm:text-xl md:text-2xl text-gray-400 mb-10 max-w-xl mx-auto leading-relaxed font-light"},"Ofertas, promociones y los mejores lugares de Punta Cana."),
+                    React.createElement("div",{style:{animation:"heroIn 1.2s cubic-bezier(.16,1,.3,1) .9s forwards",opacity:0},className:"glass rounded-2xl p-5 sm:p-6 text-left max-w-xl mx-auto",id:"searchBox"},
+                        React.createElement("input",{type:"text",value:query,onChange:function(e){setQuery(e.target.value)},onKeyDown:function(e){if(e.key==="Enter")doSearch()},placeholder:"Qu\u00e9 buscas? Rooftop, bar, restaurante...",className:"input mb-3"}),
+                        React.createElement("div",{className:"flex flex-wrap gap-2 mb-4"},
+                            ["Rooftops","Bares","Restaurantes","Nightlife","Beach Clubs"].map(function(s){
+                                return React.createElement("button",{key:s,onClick:function(){setQuery(s)},className:"text-xs px-3 py-1.5 rounded-full border border-white/8 text-gray-500 pill hover:border-accent hover:text-accent transition-all"},s)
+                            })
+                        ),
+                        React.createElement("select",{value:zone,onChange:function(e){setZone(e.target.value)},className:"input mb-4 text-gray-500"},
+                            React.createElement("option",{value:""},"Todas las zonas"),
+                            ZN.map(function(z){return React.createElement("option",{key:z.id,value:z.id},z.em+" "+z.name)})
+                        ),
+                        React.createElement("button",{onClick:doSearch,className:"btn-primary"},'Explorar lugares \u2192')
+                    )
+                ),
+                React.createElement("div",{style:{animation:"scrollHint 2.5s ease 2s infinite"}},
+                    React.createElement("div",{className:"flex flex-col items-center gap-2"},
+                        React.createElement("span",{className:"text-gray-600 text-[10px] font-semibold tracking-[.2em] uppercase"},"Scroll"),
+                        React.createElement("div",{className:"w-5 h-8 rounded-full border border-gray-700 flex items-start justify-center p-1.5"},
+                            React.createElement("div",{className:"w-1 h-2 bg-gray-500 rounded-full animate-bounce"})
+                        )
+                    )
+                )
+            )
+        }
+
+        /* ===== PROMOS SECTION ===== */
+        function Promos(p){
+            var promoPlaces=p.places.filter(function(x){return x.promo&&x.active}).sort(function(a,b){return b.rating-a.rating});
+            if(!promoPlaces.length)return null;
+            return React.createElement("section",{className:"py-16 px-5 max-w-6xl mx-auto"},
+                React.createElement(Reveal,null,
+                    React.createElement("div",{className:"text-center mb-10"},
+                        React.createElement("p",{className:"text-accent text-xs font-bold tracking-[.2em] uppercase mb-3"},'\ud83d\udd25 PROMOCIONES'),
+                        React.createElement("h2",{className:"font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2"},"Ofertas de hoy"),
+                        React.createElement("p",{className:"text-gray-500 text-sm"},"Haz click y ve directo al lugar")
+                    )
+                ),
+                React.createElement("div",{className:"scroll-x flex gap-4 pb-4 -mx-5 px-5"},
+                    promoPlaces.map(function(pl){
+                        var cat=CAT.find(function(c){return c.id===pl.cat});
+                        var zn=ZN.find(function(z){return z.id===pl.zone});
+                        return React.createElement("div",{key:pl.id,className:"card cursor-pointer flex-shrink-0",style:{minWidth:"290px",maxWidth:"340px"},onClick:function(){go("/place/"+pl.slug)}},
+                            React.createElement("div",{className:"relative h-48 overflow-hidden"},
+                                React.createElement("img",{src:pl.img,alt:pl.name,className:"w-full h-full object-cover transition-transform duration-700",loading:"lazy"}),
+                                React.createElement("div",{className:"absolute inset-0",style:{background:"linear-gradient(180deg,transparent 20%,rgba(5,5,8,.85) 80%,#050508 100%)"}}),
+                                React.createElement("div",{className:"absolute top-3 left-3 z-10"},React.createElement(Badge,{type:"promo"})),
+                                React.createElement("div",{className:"absolute bottom-3 left-4 right-4 z-10"},
+                                    React.createElement("h3",{className:"text-white font-bold text-lg mb-1"},pl.name),
+                                    React.createElement("p",{className:"text-gray-500 text-xs"},cat?cat.icon+" "+cat.name+" \u00b7 "+(zn?zn.name:""):"")
+                                )
+                            ),
+                            React.createElement("div",{className:"p-4"},
+                                React.createElement("div",{className:"rounded-xl p-3 mb-3",style:{background:"linear-gradient(135deg,rgba(232,69,69,.08),rgba(245,158,11,.08))",border:"1px solid rgba(232,69,69,.12)"}},
+                                    React.createElement("p",{className:"text-white font-bold text-sm"},'\ud83d\udcb0 '+pl.promo)
+                                ),
+                                React.createElement("div",{className:"flex items-center justify-between"},
+                                    React.createElement("div",{className:"flex items-center gap-2"},React.createElement(Stars,{rating:pl.rating}),React.createElement(Price,{level:pl.price})),
+                                    React.createElement("span",{className:"text-accent font-bold text-xs tracking-wide"},"IR AHORA \u2192")
+                                )
+                            )
+                        )
+                    })
+                )
+            )
+        }
+
+        /* ===== MAP SECTION ===== */
+        function MapSection(p){
+            var os=useState(""),zone=os[0],setZone=os[1];
+            var filtered=useMemo(function(){return zone?p.places.filter(function(x){return x.zone===zone&&x.active}):[]},[p.places,zone]);
+            return React.createElement("section",{className:"py-16 px-5 max-w-5xl mx-auto"},
+                React.createElement(Reveal,null,
+                    React.createElement("div",{className:"text-center mb-8"},
+                        React.createElement("p",{className:"text-accent text-xs font-bold tracking-[.2em] uppercase mb-3"},'\ud83d\uddfa\ufe0f MAPA INTERACTIVO'),
+                        React.createElement("h2",{className:"font-display text-3xl sm:text-4xl font-bold text-white mb-2"},"Explora por zona"),
+                        React.createElement("p",{className:"text-gray-500 text-sm"},"Haz click en una zona del mapa para ver sus lugares")
+                    )
+                ),
+                React.createElement(LMap,{
+                    center:[18.58,-68.42],zoom:11,height:"420px",
+                    markers:ZN.map(function(z){return{lat:z.lat,lng:z.lng,popup:"<b>"+z.em+" "+z.name+"</b><br><small>"+p.places.filter(function(x){return x.zone===z.id&&x.active}).length+" lugares</small>"}}),
+                    onClick:function(m){var z=ZN.find(function(zz){return zz.lat===m.lat&&zz.lng===m.lng});if(z)setZone(zone===z.id?"":z.id)}
+                }),
+                React.createElement("div",{className:"flex flex-wrap justify-center gap-2 mt-5"},
+                    ZN.map(function(z){
+                        var c=p.places.filter(function(x){return x.zone===z.id&&x.active}).length;
+                        var a=zone===z.id;
+                        return React.createElement("button",{key:z.id,onClick:function(){setZone(a?"":z.id)},className:"flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold pill transition-all duration-300 "+(a?"text-white shadow-lg":"text-gray-500"),style:{background:a?"linear-gradient(135deg,#e84545,#c62828)":"rgba(255,255,255,.03)",border:"1px solid "+(a?"transparent":"rgba(255,255,255,.04)"),boxShadow:a?"0 4px 20px rgba(232,69,69,.3)":"none"}},
+                            React.createElement("span",null,z.em),
+                            React.createElement("span",null,z.name),
+                            React.createElement("span",{className:"text-xs",style:{opacity:a?1:.4}},'('+c+')')
+                        )
+                    }),
+                    zone&&React.createElement("button",{onClick:function(){setZone("")},className:"flex items-center gap-1 px-4 py-2.5 rounded-full text-sm font-semibold pill",style:{background:"rgba(232,69,69,.08)",border:"1px solid rgba(232,69,69,.15)",color:"#e84545"}},'\u2715 Limpiar')
+                ),
+                zone&&React.createElement("div",{className:"mt-10 page-enter"},
+                    React.createElement("div",{className:"flex items-center justify-between mb-6"},
+                        React.createElement("div",null,
+                            React.createElement("p",{className:"text-accent text-xs font-bold tracking-[.15em] uppercase mb-1"},(ZN.find(function(z){return z.id===zone})||{}).em+" "+(ZN.find(function(z){return z.id===zone})||{}).name),
+                            React.createElement("h3",{className:"font-display text-2xl font-bold text-white"},filtered.length+" lugar"+(filtered.length!==1?"es":""))
+                        ),
+                        React.createElement("a",{href:"#/explore?zone="+zone,className:"btn-ghost text-xs px-4 py-2"},"Ver todo \u2192")
+                    ),
+                    React.createElement("div",{className:"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger"},
+                        filtered.slice(0,6).map(function(pl){
+                            var cat=CAT.find(function(c){return c.id===pl.cat});
+                            return React.createElement(Reveal,{key:pl.id},
+                                React.createElement("div",{className:"card cursor-pointer",onClick:function(){go("/place/"+pl.slug)}},
+                                    React.createElement(LazyImg,{src:pl.img,alt:pl.name,className:"w-full h-full object-cover",style:{height:"200px"}}),
+                                    React.createElement("div",{className:"absolute inset-0 z-10",style:{background:"linear-gradient(180deg,transparent 30%,rgba(5,5,8,.9) 80%,#050508 100%)"}}),
+                                    React.createElement("div",{className:"absolute top-3 left-3 flex gap-1.5 z-10"},
+                                        pl.isNew&&React.createElement(Badge,{type:"new"}),
+                                        pl.isPop&&React.createElement(Badge,{type:"pop"}),
+                                        pl.isFeat&&React.createElement(Badge,{type:"feat"}),
+                                        pl.isVer&&React.createElement(Badge,{type:"verified"})
+                                    ),
+                                    React.createElement("div",{className:"absolute bottom-4 left-4 right-4 z-10"},
+                                        React.createElement("h3",{className:"text-white font-bold text-lg"},pl.name),
+                                        React.createElement("p",{className:"text-gray-500 text-xs mt-1"},cat?cat.icon+" "+cat.name:"")
+                                    ),
+                                    React.createElement("div",{className:"p-4"},
+                                        React.createElement("p",{className:"text-gray-500 text-sm line-clamp-2 mb-3"},pl.desc),
+                                        React.createElement("div",{className:"flex items-center justify-between"},
+                                            React.createElement("div",{className:"flex items-center gap-2"},React.createElement(Stars,{rating:pl.rating}),React.createElement(Price,{level:pl.price})),
+                                            React.createElement("span",{className:"text-accent font-semibold text-xs"},"Ver \u2192")
+                                        )
+                                    )
+                                )
+                            )
+                        })
+                    )
+                )
+            )
+        }
+
+        /* ===== POPULAR GRID ===== */
+        function PopularGrid(p){
+            var pop=p.places.filter(function(x){return x.isPop&&x.active});
+            if(!pop.length)return null;
+            return React.createElement("section",{className:"py-16 px-5 max-w-6xl mx-auto"},
+                React.createElement(Reveal,null,
+                    React.createElement("div",{className:"text-center mb-10"},
+                        React.createElement("p",{className:"text-accent text-xs font-bold tracking-[.2em] uppercase mb-3"},'\u2b50 POPULARES'),
+                        React.createElement("h2",{className:"font-display text-3xl sm:text-4xl font-bold text-white"},"Lo m\u00e1s buscado")
+                    )
+                ),
+                React.createElement("div",{className:"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger"},
+                    pop.slice(0,6).map(function(pl){
+                        return React.createElement(Reveal,{key:pl.id,direction:"scale"},
+                            React.createElement("div",{className:"card cursor-pointer",onClick:function(){go("/place/"+pl.slug)}},
+                                React.createElement(LazyImg,{src:pl.img,alt:pl.name,className:"w-full h-full object-cover",style:{height:"220px"}}),
+                                React.createElement("div",{className:"absolute inset-0 z-10",style:{background:"linear-gradient(180deg,transparent 40%,rgba(5,5,8,.9) 80%,#050508 100%)"}}),
+                                React.createElement("div",{className:"absolute top-3 left-3 flex gap-1.5 z-10"},
+                                    pl.isPop&&React.createElement(Badge,{type:"pop"}),
+                                    pl.isFeat&&React.createElement(Badge,{type:"feat"})
+                                ),
+                                React.createElement("div",{className:"absolute bottom-4 left-4 right-4 z-10"},
+                                    React.createElement("h3",{className:"text-white font-bold text-xl"},pl.name)
+                                ),
+                                React.createElement("div",{className:"p-5"},
+                                    React.createElement("p",{className:"text-gray-500 text-sm line-clamp-2 mb-3"},pl.desc),
+                                    React.createElement("div",{className:"flex items-center justify-between"},
+                                        React.createElement("div",{className:"flex items-center gap-2"},React.createElement(Stars,{rating:pl.rating}),React.createElement(Price,{level:pl.price})),
+                                        React.createElement("span",{className:"text-accent font-semibold text-xs"},"Ver \u2192")
+                                    )
+                                )
+                            )
+                        )
+                    })
+                )
+            )
+        }
+
+        /* ===== HOME ===== */
+        function HomePage(p){
+            var places=p.places;
+            var cp=useCounter(places.filter(function(x){return x.active}).length,1500),countPlaces=cp[0],cr1=cp[1];
+            var cz=useCounter(6,1200),countZones=cz[0],cr2=cz[1];
+            return React.createElement("div",null,
+                React.createElement(Hero,{places:places}),
+                React.createElement(Promos,{places:places}),
+                React.createElement("section",{className:"py-20 px-5"},
+                    React.createElement("div",{className:"max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center"},
+                        React.createElement(Reveal,{delay:0},React.createElement("div",{ref:cr1},React.createElement("div",{className:"num grad counter"},countPlaces,"+"),React.createElement("p",{className:"text-gray-600 text-sm mt-2 font-medium"},"Lugares"))),
+                        React.createElement(Reveal,{delay:.1},React.createElement("div",{ref:cr2},React.createElement("div",{className:"num grad counter"},countZones),React.createElement("p",{className:"text-gray-600 text-sm mt-2 font-medium"},"Zonas"))),
+                        React.createElement(Reveal,{delay:.2},React.createElement("div",null,React.createElement("div",{className:"num grad"},"4.7 \u2605"),React.createElement("p",{className:"text-gray-600 text-sm mt-2 font-medium"},"Rating"))),
+                        React.createElement(Reveal,{delay:.3},React.createElement("div",null,React.createElement("div",{className:"num grad"},"10K+"),React.createElement("p",{className:"text-gray-600 text-sm mt-2 font-medium"},"Usuarios")))
+                    )
+                ),
+                React.createElement("div",{className:"divider"}),
+                React.createElement(MapSection,{places:places}),
+                React.createElement("div",{className:"divider"}),
+                React.createElement(PopularGrid,{places:places}),
+                React.createElement("footer",{className:"px-5 py-16 border-t border-white/5 mt-8 safe-bottom"},
+                    React.createElement("div",{className:"max-w-6xl mx-auto text-center"},
+                        React.createElement(Reveal,null,
+                            React.createElement("div",{className:"font-display font-bold text-2xl mb-2 text-white"},"VIBE ",React.createElement("span",{className:"grad"},"CANA")),
+                            React.createElement("p",{className:"text-gray-600 text-sm mb-8"},"Tu gu\u00eda exclusiva en Punta Cana"),
+                            React.createElement("div",{className:"flex justify-center gap-8 text-sm text-gray-600 mb-8"},
+                                React.createElement("a",{href:"#/explore",className:"hover:text-white transition"},"Explorar"),
+                                React.createElement("a",{href:"#/zones",className:"hover:text-white transition"},"Zonas"),
+                                React.createElement("a",{href:"#/business",className:"hover:text-white transition"},"Negocios"),
+                                React.createElement("a",{href:"#/admin",className:"hover:text-white transition"},"Admin")
+                            ),
+                            React.createElement("p",{className:"text-gray-700 text-xs"},'\u00a9 2026 VIBE CANA')
+                        )
+                    )
+                )
+            )
+        }
+
+        /* ===== EXPLORE ===== */
+        function ExplorePage(p){
+            var places=p.places;
+            var hp=window.location.hash.split("?"),params=new URLSearchParams(hp[1]||"");
+            var os=useState(params.get("q")||""),search=os[0],setSearch=os[1];
+            var os2=useState(params.get("category")||""),category=os2[0],setCategory=os2[1];
+            var os3=useState(params.get("zone")||""),zone=os3[0],setZone=os3[1];
+            var filtered=useMemo(function(){return places.filter(function(x){
+                if(!x.active)return false;
+                var q=search.toLowerCase();
+                if(q&&x.name.toLowerCase().indexOf(q)===-1&&x.desc.toLowerCase().indexOf(q)===-1)return false;
+                if(category&&x.cat!==category)return false;
+                if(zone&&x.zone!==zone)return false;
+                return true
+            })},[places,search,category,zone]);
+            return React.createElement("div",{className:"pt-20 pb-24 px-5 max-w-6xl mx-auto page-enter"},
+                React.createElement("div",{className:"mb-8"},React.createElement("h1",{className:"font-display text-3xl sm:text-4xl font-bold text-white mb-1"},"Explorar"),React.createElement("p",{className:"text-gray-500"},"Descubre todos los lugares de Punta Cana")),
+                React.createElement("input",{type:"text",value:search,onChange:function(e){setSearch(e.target.value)},placeholder:"Buscar por nombre...",className:"input mb-4"}),
+                React.createElement("div",{className:"scroll-x flex gap-2 pb-3 mb-6 -mx-5 px-5"},
+                    React.createElement("button",{onClick:function(){setCategory("")},className:"px-4 py-2 rounded-full text-sm font-semibold pill "+(!category?"text-white":"text-gray-500"),style:{background:!category?"linear-gradient(135deg,#e84545,#c62828)":"rgba(255,255,255,.03)",border:"1px solid "+(!category?"transparent":"rgba(255,255,255,.04)")}},"Todos"),
+                    CAT.map(function(c){
+                        var a=category===c.id;
+                        return React.createElement("button",{key:c.id,onClick:function(){setCategory(a?"":c.id)},className:"flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap pill transition-all",style:{background:a?c.color:"rgba(255,255,255,.03)",color:a?"#fff":"#6b7280",border:"1px solid "+(a?"transparent":"rgba(255,255,255,.04)")}},
+                            React.createElement("span",null,c.icon),React.createElement("span",null,c.name)
+                        )
+                    })
+                ),
+                React.createElement("p",{className:"text-gray-600 text-sm mb-5"},filtered.length+" lugar"+(filtered.length!==1?"es":"")),
+                React.createElement("div",{className:"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger"},
+                    filtered.map(function(pl){
+                        var cat=CAT.find(function(c){return c.id===pl.cat});
+                        return React.createElement(Reveal,{key:pl.id},
+                            React.createElement("div",{className:"card cursor-pointer",onClick:function(){go("/place/"+pl.slug)}},
+                                React.createElement(LazyImg,{src:pl.img,alt:pl.name,className:"w-full h-full object-cover",style:{height:"220px"}}),
+                                React.createElement("div",{className:"absolute inset-0 z-10",style:{background:"linear-gradient(180deg,transparent 30%,rgba(5,5,8,.9) 80%,#050508 100%)"}}),
+                                React.createElement("div",{className:"absolute top-3 left-3 flex gap-1.5 z-10"},
+                                    pl.isNew&&React.createElement(Badge,{type:"new"}),
+                                    pl.isPop&&React.createElement(Badge,{type:"pop"}),
+                                    pl.isFeat&&React.createElement(Badge,{type:"feat"}),
+                                    pl.isVer&&React.createElement(Badge,{type:"verified"})
+                                ),
+                                React.createElement("div",{className:"absolute bottom-4 left-4 right-4 z-10"},
+                                    React.createElement("h3",{className:"text-white font-bold text-lg"},pl.name),
+                                    React.createElement("p",{className:"text-gray-500 text-xs mt-1"},cat?cat.icon+" "+cat.name:"")
+                                ),
+                                React.createElement("div",{className:"p-4"},
+                                    React.createElement("p",{className:"text-gray-500 text-sm line-clamp-2 mb-3"},pl.desc),
+                                    React.createElement("div",{className:"flex items-center justify-between"},
+                                        React.createElement("div",{className:"flex items-center gap-2"},React.createElement(Stars,{rating:pl.rating}),React.createElement(Price,{level:pl.price})),
+                                        React.createElement("span",{className:"text-accent font-semibold text-xs"},"Ver \u2192")
+                                    )
+                                )
+                            )
+                        )
+                    })
+                )
+            )
+        }
+
+        /* ===== ZONES ===== */
+        function ZonesPage(p){
+            return React.createElement("div",{className:"pt-20 pb-24 px-5 max-w-6xl mx-auto page-enter"},
+                React.createElement(Reveal,null,React.createElement("h1",{className:"font-display text-3xl sm:text-4xl font-bold text-white mb-2"},"Zonas"),React.createElement("p",{className:"text-gray-500 mb-8"},"Explora por zona en Punta Cana")),
+                React.createElement(Reveal,null,
+                    React.createElement(LMap,{
+                        center:[18.58,-68.42],zoom:11,height:"350px",
+                        markers:ZN.map(function(z){return{lat:z.lat,lng:z.lng,popup:"<b>"+z.em+" "+z.name+"</b><br><small>"+p.places.filter(function(x){return x.zone===z.id&&x.active}).length+" lugares</small>"}}),
+                        onClick:function(m){var z=ZN.find(function(zz){return zz.lat===m.lat&&zz.lng===m.lng});if(z)go("/explore?zone="+z.id)}
+                    })
+                ),
+                React.createElement("div",{className:"grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger mt-8"},
+                    ZN.map(function(z){
+                        var c=p.places.filter(function(x){return x.zone===z.id&&x.active}).length;
+                        return React.createElement(Reveal,{key:z.id},
+                            React.createElement("a",{href:"#/explore?zone="+z.id,className:"glass-card p-6 block pill transition-all",style:{cursor:"pointer"}},
+                                React.createElement("span",{className:"text-4xl block mb-3"},z.em),
+                                React.createElement("h3",{className:"font-bold text-lg text-white mb-1"},z.name),
+                                React.createElement("p",{className:"text-gray-600 text-sm"},c+" lugar"+(c!==1?"es":""))
+                            )
+                        )
+                    })
+                )
+            )
+        }
+
+        /* ===== PLACE DETAIL ===== */
+        function PlacePage(p){
+            var slug=window.location.hash.split("/")[2];
+            var pl=p.places.find(function(x){return x.slug===slug&&x.active});
+            if(!pl)return React.createElement("div",{className:"pt-24 pb-24 px-5 text-center page-enter"},
+                React.createElement("p",{className:"text-5xl mb-4"},'\ud83d\ude15'),
+                React.createElement("h1",{className:"text-xl font-bold text-white mb-4"},"Lugar no encontrado"),
+                React.createElement("a",{href:"#/explore",className:"btn-primary inline-block w-auto px-6"},"Volver a explorar")
+            );
+            var cat=CAT.find(function(c){return c.id===pl.cat});
+            var zn=ZN.find(function(z){return z.id===pl.zone});
+            var isFav=p.favorites.indexOf(pl.id)!==-1;
+            var showRes=useState(false); var resOpen=showRes[0]; var setResOpen=showRes[1];
+            var resForm=useState({name:"",phone:"",date:"",time:"",people:""}); var form=resForm[0]; var setForm=resForm[1];
+            var qrData=useState(null); var qr=qrData[0]; var setQr=qrData[1];
+            var submitted=useState(false); var sent=submitted[0]; var setSent=submitted[1];
+            var qrRef=useRef(null);
+            function handleReserve(e){
+                e.preventDefault();
+                var code="VC"+Date.now().toString(36).toUpperCase();
+                var data={code:code,place:pl.name,zone:zn?zn.name:"",date:form.date,time:form.time,people:form.people,name:form.name,phone:form.phone,ts:new Date().toISOString()};
+                var reservations=gs("vc_reservations",[]); ss("vc_reservations",reservations.concat([data]));
+                setQr(data); setSent(true);
+                setTimeout(function(){
+                    if(qrRef.current&&typeof QRCode!="undefined"){
+                        QRCode.toCanvas(qrRef.current,JSON.stringify(data),{width:200,margin:2,color:{dark:"#ffffff",light:"#00000000"}},function(err){if(err)console.log(err)});
+                    }
+                },100);
+            }
+            return React.createElement("div",{className:"pt-16 pb-24 page-enter"},
+                React.createElement("div",{className:"relative h-[50vh] min-h-[300px] max-h-[500px] overflow-hidden"},
+                    React.createElement("img",{src:pl.img,alt:pl.name,className:"w-full h-full object-cover"}),
+                    React.createElement("div",{className:"absolute inset-0",style:{background:"linear-gradient(180deg,rgba(5,5,8,.3) 0%,transparent 30%,rgba(5,5,8,.7) 70%,#050508 100%)"}}),
+                    React.createElement("a",{href:"#/explore",className:"absolute top-4 left-4 glass px-4 py-2 rounded-full text-sm text-white font-medium"},'\u2190 Volver')
+                ),
+                React.createElement("div",{className:"max-w-3xl mx-auto px-5 -mt-8 relative z-10"},
+                    React.createElement("div",{className:"glass-card p-6 sm:p-8"},
+                        React.createElement("div",{className:"flex flex-wrap gap-1.5 mb-4"},
+                            pl.isNew&&React.createElement(Badge,{type:"new"}),
+                            pl.isPop&&React.createElement(Badge,{type:"pop"}),
+                            pl.isFeat&&React.createElement(Badge,{type:"feat"}),
+                            pl.isVer&&React.createElement(Badge,{type:"verified"})
+                        ),
+                        React.createElement("h1",{className:"font-display text-2xl sm:text-4xl font-bold text-white mb-2"},pl.name),
+                        React.createElement("p",{className:"text-gray-500 text-sm mb-5"},(cat?cat.icon+" "+cat.name:"")+" \u00b7 "+(zn?zn.em+" "+zn.name:"")),
+                        React.createElement("div",{className:"flex items-center gap-4 mb-6 flex-wrap"},
+                            React.createElement(Stars,{rating:pl.rating,size:"lg"}),
+                            React.createElement(Price,{level:pl.price}),
+                            React.createElement("button",{onClick:function(){p.toggleFavorite(pl.id)},className:"ml-auto text-2xl transition-transform active:scale-90"},isFav?"\u2764\ufe0f":"\ud83e\udd0d")
+                        ),
+                        pl.promo&&React.createElement("div",{className:"rounded-xl p-3 mb-4",style:{background:"linear-gradient(135deg,rgba(232,69,69,.08),rgba(245,158,11,.08))",border:"1px solid rgba(232,69,69,.12)"}},
+                            React.createElement("p",{className:"text-white font-bold text-sm"},'\ud83d\udcb0 '+pl.promo)
+                        ),
+                        React.createElement("p",{className:"text-gray-400 leading-relaxed mb-6"},pl.desc),
+                        React.createElement("div",{className:"grid sm:grid-cols-2 gap-3 mb-6"},
+                            React.createElement("div",{className:"rounded-xl p-4",style:{background:"rgba(255,255,255,.02)",border:"1px solid rgba(255,255,255,.03)"}},
+                                React.createElement("p",{className:"text-gray-600 text-xs mb-1"},"Horario"),
+                                React.createElement("p",{className:"font-semibold text-sm text-gray-300"},'\ud83d\udd50 '+pl.hours)
+                            ),
+                            React.createElement("div",{className:"rounded-xl p-4",style:{background:"rgba(255,255,255,.02)",border:"1px solid rgba(255,255,255,.03)"}},
+                                React.createElement("p",{className:"text-gray-600 text-xs mb-1"},"Direcci\u00f3n"),
+                                React.createElement("p",{className:"font-semibold text-sm text-gray-300"},'\ud83d\udccd '+pl.addr)
+                            )
+                        ),
+                        React.createElement("div",{className:"grid grid-cols-3 gap-3"},
+                            React.createElement("a",{href:"https://wa.me/"+pl.wa+"?text=Hola,%20encontr%C3%A9%20"+pl.name+"%20en%20VIBE%20CANA",target:"_blank",rel:"noopener noreferrer",className:"py-3.5 rounded-xl font-bold text-center text-sm transition-all active:scale-[0.97]",style:{background:"#25D366",color:"#fff"}},'\ud83d\udcac WhatsApp'),
+                            React.createElement("a",{href:"https://www.google.com/maps/search/?api=1&query="+pl.lat+","+pl.lng,target:"_blank",rel:"noopener noreferrer",className:"py-3.5 rounded-xl font-bold text-center text-sm transition-all active:scale-[0.97]",style:{background:"#1A73E8",color:"#fff"}},'\ud83d\uddfa\ufe0f C\u00f3mo llegar'),
+                            React.createElement("button",{onClick:function(){setResOpen(true)},className:"btn-primary py-3.5 text-sm"},'\ud83d\udcc5 Reservar')
+                        )
+                    )
+                ),
+                React.createElement("div",{className:"max-w-3xl mx-auto px-5 mt-6"},
+                    React.createElement(Reveal,null,
+                        React.createElement("h3",{className:"font-display text-xl font-bold text-white mb-4"},'\ud83d\udccd Ubicaci\u00f3n'),
+                        React.createElement(LMap,{center:[pl.lat,pl.lng],zoom:15,height:"280px",markers:[{lat:pl.lat,lng:pl.lng,popup:"<b>"+pl.name+"</b>"}]})
+                    )
+                ),
+                resOpen&&React.createElement("div",{className:"fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4",style:{background:"rgba(0,0,0,.8)"}},
+                    React.createElement("div",{className:"glass-card p-6 max-w-md w-full max-h-[90vh] overflow-y-auto page-enter",style:{borderRadius:"24px 24px 0 0"}},
+                        sent&&qr
+                            ? React.createElement("div",{className:"text-center py-4"},
+                                React.createElement("div",{className:"w-10 h-10 rounded-full mx-auto mb-3 flex items-center justify-center",style:{background:"linear-gradient(135deg,#10b981,#059669)"}},React.createElement("span",{className:"text-white text-lg"},'\u2713')),
+                                React.createElement("h3",{className:"text-xl font-bold text-white mb-1"},'\u00a1Reservaci\u00f3n confirmada!'),
+                                React.createElement("p",{className:"text-gray-500 text-sm mb-1"},'C\u00f3digo: '+qr.code),
+                                React.createElement("p",{className:"text-gray-600 text-xs mb-4"},qr.name+' \u00b7 '+qr.date+' \u00b7 '+qr.time+' \u00b7 '+qr.people+' personas'),
+                                React.createElement("canvas",{ref:qrRef,style:{margin:"0 auto",borderRadius:"16px",background:"#111",padding:"16px"},className:"block"}),
+                                React.createElement("p",{className:"text-gray-600 text-xs mt-3 mb-2"},"Presenta este c\u00f3digo QR al llegar al lugar"),
+                                React.createElement("div",{className:"flex gap-3 mt-2"},
+                                    React.createElement("button",{onClick:function(){
+                                        var canvas=qrRef.current;
+                                        if(!canvas)return;
+                                        var link=document.createElement("a");
+                                        link.download="vibecana-reserva-"+qr.code+".png";
+                                        link.href=canvas.toDataURL("image/png");
+                                        link.click();
+                                    },className:"btn-ghost text-xs flex-1",style:{border:"1px solid rgba(255,255,255,.08)"}},'\ud83d\udce5 Descargar QR'),
+                                    React.createElement("button",{onClick:function(){
+                                        if(navigator.share&&qrRef.current){
+                                            qrRef.current.toBlob(function(blob){
+                                                var file=new File([blob],"reserva-"+qr.code+".png",{type:"image/png"});
+                                                navigator.share({title:"Mi reserva VIBE CANA",text:"Reserva en "+qr.place+" - C\u00f3digo: "+qr.code,files:[file]}).catch(function(){});
+                                            });
+                                        }
+                                    },className:"btn-ghost text-xs flex-1",style:{border:"1px solid rgba(255,255,255,.08)"}},'\ud83d\udce8 Compartir'),
+                                    React.createElement("button",{onClick:function(){setResOpen(false);setSent(false);setQr(null);setForm({name:"",phone:"",date:"",time:"",people:""})},className:"btn-primary text-xs flex-1"},"Cerrar")
+                                )
+                            )
+                            : React.createElement("div",null,
+                                React.createElement("div",{className:"flex justify-between items-center mb-5"},
+                                    React.createElement("h3",{className:"text-lg font-bold text-white"},'Reservar en '+pl.name),
+                                    React.createElement("button",{onClick:function(){setResOpen(false)},className:"w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-white",style:{background:"rgba(255,255,255,.05)"}},'\u2715')
+                                ),
+                                React.createElement("form",{onSubmit:handleReserve,className:"space-y-3"},
+                                    React.createElement("input",{required:true,placeholder:"Tu nombre",value:form.name,onChange:function(e){setForm(Object.assign({},form,{name:e.target.value}))},className:"input"}),
+                                    React.createElement("input",{required:true,type:"tel",placeholder:"Tel\u00e9fono",value:form.phone,onChange:function(e){setForm(Object.assign({},form,{phone:e.target.value}))},className:"input"}),
+                                    React.createElement("div",{className:"grid grid-cols-2 gap-3"},
+                                        React.createElement("input",{required:true,type:"date",value:form.date,onChange:function(e){setForm(Object.assign({},form,{date:e.target.value}))},className:"input"}),
+                                        React.createElement("input",{required:true,type:"time",value:form.time,onChange:function(e){setForm(Object.assign({},form,{time:e.target.value}))},className:"input"})
+                                    ),
+                                    React.createElement("input",{required:true,type:"number",min:"1",placeholder:"Personas",value:form.people,onChange:function(e){setForm(Object.assign({},form,{people:e.target.value}))},className:"input"}),
+                                    React.createElement("button",{type:"submit",className:"btn-primary"},'\ud83d\udcc5 Confirmar reservaci\u00f3n')
+                                )
+                            )
+                    )
+                )
+            )
+        }
+
+        /* ===== FAVORITES ===== */
+        function FavPage(p){
+            var favs=p.places.filter(function(x){return p.favorites.indexOf(x.id)!==-1});
+            if(!favs.length)return React.createElement("div",{className:"pt-20 pb-24 px-5 max-w-6xl mx-auto page-enter"},
+                React.createElement("h1",{className:"font-display text-3xl sm:text-4xl font-bold text-white mb-1"},'\u2764\ufe0f Favoritos'),
+                React.createElement("p",{className:"text-gray-500 mb-8"},"Tus lugares guardados"),
+                React.createElement("div",{className:"text-center py-20"},
+                    React.createElement("p",{className:"text-5xl mb-4"},'\ud83e\udd0d'),
+                    React.createElement("p",{className:"text-lg text-gray-400 mb-4"},"A\u00fan no tienes favoritos"),
+                    React.createElement("a",{href:"#/explore",className:"btn-primary inline-block w-auto px-6"},"Explorar lugares")
+                )
+            );
+            return React.createElement("div",{className:"pt-20 pb-24 px-5 max-w-6xl mx-auto page-enter"},
+                React.createElement("h1",{className:"font-display text-3xl sm:text-4xl font-bold text-white mb-1"},'\u2764\ufe0f Favoritos'),
+                React.createElement("p",{className:"text-gray-500 mb-8"},"Tus lugares guardados"),
+                React.createElement("div",{className:"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger"},
+                    favs.map(function(pl){
+                        return React.createElement(Reveal,{key:pl.id},
+                            React.createElement("div",{className:"card cursor-pointer",onClick:function(){go("/place/"+pl.slug)}},
+                                React.createElement(LazyImg,{src:pl.img,alt:pl.name,className:"w-full h-full object-cover",style:{height:"220px"}}),
+                                React.createElement("div",{className:"absolute inset-0 z-10",style:{background:"linear-gradient(180deg,transparent 40%,rgba(5,5,8,.9) 80%,#050508 100%)"}}),
+                                React.createElement("div",{className:"absolute bottom-4 left-4 z-10"},React.createElement("h3",{className:"text-white font-bold text-lg"},pl.name)),
+                                React.createElement("div",{className:"p-5"},
+                                    React.createElement("p",{className:"text-gray-500 text-sm line-clamp-2 mb-3"},pl.desc),
+                                    React.createElement("div",{className:"flex items-center justify-between"},React.createElement(Stars,{rating:pl.rating}),React.createElement(Price,{level:pl.price}))
+                                )
+                            )
+                        )
+                    })
+                )
+            )
+        }
+
+        /* ===== BUSINESS ===== */
+        function BizPage(){
+            var os=useState(false),sent=os[0],setSent=os[1];
+            return React.createElement("div",{className:"pt-20 pb-24 px-5 max-w-4xl mx-auto page-enter"},
+                React.createElement(Reveal,null,
+                    React.createElement("div",{className:"text-center mb-12"},
+                        React.createElement("h1",{className:"font-display text-3xl sm:text-5xl font-bold text-white mb-3"},"Haz que descubran tu negocio"),
+                        React.createElement("p",{className:"text-gray-400 max-w-xl mx-auto"},"VIBE CANA conecta tu negocio con personas que buscan qu\u00e9 hacer en Punta Cana.")
+                    )
+                ),
+                sent
+                    ? React.createElement("div",{className:"text-center py-20 glass-card"},
+                        React.createElement("p",{className:"text-5xl mb-4"},'\u2705'),
+                        React.createElement("h3",{className:"text-xl font-bold text-white mb-2"},'\u00a1Solicitud enviada!'),
+                        React.createElement("p",{className:"text-gray-400 text-sm mb-4"},"Nos pondremos en contacto pronto."),
+                        React.createElement("button",{onClick:function(){setSent(false)},className:"btn-ghost"},"Enviar otra")
+                    )
+                    : React.createElement("div",{className:"glass-card p-6 sm:p-8"},
+                        React.createElement("h2",{className:"font-display text-2xl font-bold text-white mb-6 text-center"},"Quiero aparecer en VIBE CANA"),
+                        React.createElement("form",{onSubmit:function(e){e.preventDefault();setSent(true)},className:"space-y-3"},
+                            React.createElement("input",{required:true,placeholder:"Nombre del negocio",className:"input"}),
+                            React.createElement("input",{required:true,placeholder:"Tu nombre",className:"input"}),
+                            React.createElement("input",{required:true,type:"tel",placeholder:"Tel\u00e9fono",className:"input"}),
+                            React.createElement("input",{required:true,type:"email",placeholder:"Email",className:"input"}),
+                            React.createElement("textarea",{placeholder:"Cu\u00e9ntanos sobre tu negocio",className:"input",rows:"4"}),
+                            React.createElement("button",{type:"submit",className:"btn-primary"},"Enviar solicitud")
+                        )
+                    )
+            )
+        }
+
+        /* ===== ADMIN ===== */
+        function AdminPage(p){
+            var os=useState(gs("vc_admin",false)),logged=os[0],setLogged=os[1];
+            var os2=useState(""),pw=os2[0],setPw=os2[1];
+            if(!logged)return React.createElement("div",{className:"pt-24 pb-24 px-5 max-w-sm mx-auto page-enter"},
+                React.createElement("div",{className:"glass-card p-8"},
+                    React.createElement("h1",{className:"font-display text-2xl font-bold text-white mb-6 text-center"},"Admin"),
+                    React.createElement("form",{onSubmit:function(e){e.preventDefault();if(pw==="vibecana2026")setLogged(true)},className:"space-y-3"},
+                        React.createElement("input",{type:"password",placeholder:"Contrase\u00f1a",value:pw,onChange:function(e){setPw(e.target.value)},className:"input"}),
+                        React.createElement("button",{type:"submit",className:"btn-primary"},"Entrar")
+                    ),
+                    React.createElement("p",{className:"text-gray-600 text-xs text-center mt-3"},"Demo: vibecana2026")
+                )
+            );
+            var toggle=function(id){p.setPlaces(p.places.map(function(x){return x.id===id?Object.assign({},x,{active:!x.active}):x}))};
+            var del=function(id){p.setPlaces(p.places.filter(function(x){return x.id!==id}))};
+            return React.createElement("div",{className:"pt-20 pb-24 px-5 max-w-6xl mx-auto page-enter"},
+                React.createElement("div",{className:"flex justify-between items-center mb-6"},
+                    React.createElement("h1",{className:"font-display text-2xl sm:text-3xl font-bold text-white"},"Panel Admin"),
+                    React.createElement("button",{onClick:function(){setLogged(false)},className:"btn-ghost text-xs"},"Salir")
+                ),
+                React.createElement("div",{className:"space-y-2"},
+                    p.places.map(function(pl){
+                        return React.createElement("div",{key:pl.id,className:"glass-card p-4 flex items-center gap-4"},
+                            React.createElement("img",{src:pl.img,className:"w-14 h-14 object-cover rounded-lg flex-shrink-0"}),
+                            React.createElement("div",{className:"flex-1 min-w-0"},
+                                React.createElement("h3",{className:"font-bold text-sm text-white truncate"},pl.name),
+                                React.createElement("p",{className:"text-gray-600 text-xs"},pl.active?"\u2705 Activo":"\u274c Inactivo")
+                            ),
+                            React.createElement("button",{onClick:function(){toggle(pl.id)},className:"w-9 h-9 rounded-lg flex items-center justify-center text-sm pill",style:{background:"rgba(255,255,255,.03)"}},pl.active?"\u2705":"\u274c"),
+                            React.createElement("button",{onClick:function(){del(pl.id)},className:"w-9 h-9 rounded-lg flex items-center justify-center text-sm pill",style:{background:"rgba(255,255,255,.03)"}},'\ud83d\uddd1\ufe0f')
+                        )
+                    })
+                )
+            )
+        }
+
+        /* ===== LOGIN PAGE ===== */
+        function LoginPage(){
+            var auth=useAuth();
+            var os=useState(false),isRegister=os[0],setIsRegister=os[1];
+            var os2=useState(""),email=os2[0],setEmail=os2[1];
+            var os3=useState(""),password=os3[0],setPassword=os3[1];
+            var os4=useState(""),name=os4[0],setName=os4[1];
+            var os5=useState(false),loading=os5[0],setLoading=os5[1];
+            var os6=useState(""),error=os6[0],setError=os6[1];
+            var os7=useState(false),showPhoneModal=os7[0],setShowPhoneModal=os7[1];
+            var os8=useState(""),phone=os8[0],setPhone=os8[1];
+            var os9=useState(""),verificationCode=os9[0],setVerificationCode=os9[1];
+            var os10=useState(null),confirmationResult=os10[0],setConfirmationResult=os10[1];
+            var os11=useState(false),phoneLoading=os11[0],setPhoneLoading=os11[1];
+            var recaptchaRef=useRef(null);
+            var verifierRef=useRef(null);
+            if(auth.user){go("/");return null}
+            function handleSubmit(e){
+                e.preventDefault();setError("");setLoading(true);
+                var fn=isRegister
+                    ? registerWithEmail(email,password,name)
+                    : loginWithEmail(email,password);
+                fn.then(function(){go("/")}).catch(function(err){setError(err.message)}).finally(function(){setLoading(false)})
+            }
+            function handleGoogle(){
+                setError("");setLoading(true);
+                loginWithGoogle().then(function(){go("/")}).catch(function(err){setError(err.message)}).finally(function(){setLoading(false)})
+            }
+            function handleFacebook(){
+                setError("");setLoading(true);
+                loginWithFacebook().then(function(){go("/")}).catch(function(err){setError(err.message)}).finally(function(){setLoading(false)})
+            }
+            function handleApple(){
+                setError("");setLoading(true);
+                loginWithApple().then(function(){go("/")}).catch(function(err){setError(err.message)}).finally(function(){setLoading(false)})
+            }
+            function initRecaptcha(){
+                if(!verifierRef.current){
+                    verifierRef.current=new firebase.auth.RecaptchaVerifier(recaptchaRef.current,{size:'invisible',callback:function(){}});
+                }
+                return verifierRef.current;
+            }
+            function handleSendCode(){
+                if(!phone||phone.length<8){setError('Ingresa un n\u00famero v\u00e1lido');return}
+                setError('');setPhoneLoading(true);
+                var verifier=initRecaptcha();
+                sendPhoneVerification(phone,verifier).then(function(result){
+                    setConfirmationResult(result);
+                    setPhoneLoading(false);
+                }).catch(function(err){
+                    setError(err.message);setPhoneLoading(false);
+                });
+            }
+            function handleVerifyCode(){
+                if(!verificationCode||verificationCode.length<6){setError('Ingresa el c\u00f3digo de 6 d\u00edgitos');return}
+                setError('');setPhoneLoading(true);
+                confirmationResult.confirm(verificationCode).then(function(){
+                    go('/');
+                }).catch(function(err){
+                    setError('C\u00f3digo incorrecto');setPhoneLoading(false);
+                });
+            }
+            return React.createElement("div",{className:"min-h-screen flex items-center justify-center px-5 py-20 page-enter"},
+                React.createElement("div",{className:"w-full max-w-md"},
+                    React.createElement("div",{className:"text-center mb-8"},
+                        React.createElement("a",{href:"#/",className:"inline-flex items-center gap-3 mb-6"},
+                            React.createElement("div",{className:"w-12 h-12 rounded-2xl flex items-center justify-center",style:{background:"linear-gradient(135deg,#e84545,#f59e0b)",boxShadow:"0 8px 30px rgba(232,69,69,.3)"}},
+                                React.createElement("span",{className:"text-white font-extrabold text-xl"},"V")
+                            ),
+                            React.createElement("span",{className:"font-display font-bold text-3xl text-white"},"VIBE ",React.createElement("span",{className:"grad"},"CANA"))
+                        ),
+                        React.createElement("h1",{className:"font-display text-2xl sm:text-3xl font-bold text-white mb-2"},isRegister?"Crear cuenta":"Iniciar sesi\u00f3n"),
+                        React.createElement("p",{className:"text-gray-500 text-sm"},isRegister?"\u00a1Unirte es gratis!":"Bienvenido de vuelta")
+                    ),
+                    React.createElement("div",{className:"glass-card p-6 sm:p-8"},
+                        React.createElement("button",{onClick:handleGoogle,disabled:loading,className:"w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-semibold text-sm mb-3 pill",style:{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)",color:"#e5e7eb"}},
+                            React.createElement("svg",{width:"20",height:"20",viewBox:"0 0 24 24"},React.createElement("path",{d:"M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z",fill:"#4285F4"}),React.createElement("path",{d:"M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z",fill:"#34A853"}),React.createElement("path",{d:"M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z",fill:"#FBBC05"}),React.createElement("path",{d:"M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z",fill:"#EA4335"})),
+                            React.createElement("span",null,"Continuar con Google")
+                        ),
+                        React.createElement("button",{onClick:handleFacebook,disabled:loading,className:"w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-semibold text-sm mb-3 pill",style:{background:"rgba(24,119,242,.15)",border:"1px solid rgba(24,119,242,.3)",color:"#1877F2"}},
+                            React.createElement("svg",{width:"20",height:"20",viewBox:"0 0 24 24",fill:"currentColor"},React.createElement("path",{d:"M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"})),
+                            React.createElement("span",null,"Continuar con Facebook")
+                        ),
+                        React.createElement("button",{onClick:handleApple,disabled:loading,className:"w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-semibold text-sm mb-3 pill",style:{background:"rgba(255,255,255,.95)",border:"1px solid rgba(255,255,255,.8)",color:"#000"}},
+                            React.createElement("svg",{width:"18",height:"18",viewBox:"0 0 24 24",fill:"currentColor"},React.createElement("path",{d:"M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"})),
+                            React.createElement("span",null,"Continuar con Apple")
+                        ),
+                        React.createElement("button",{onClick:function(){setShowPhoneModal(true)},disabled:loading,className:"w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-semibold text-sm mb-5 pill",style:{background:"rgba(16,185,129,.15)",border:"1px solid rgba(16,185,129,.3)",color:"#10b981"}},
+                            React.createElement("svg",{width:"20",height:"20",viewBox:"0 0 24 24",fill:"currentColor"},React.createElement("path",{d:"M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"})),
+                            React.createElement("span",null,"Continuar con Tel\u00e9fono")
+                        ),
+                        React.createElement("div",{className:"flex items-center gap-3 mb-5"},
+                            React.createElement("div",{className:"flex-1 h-px",style:{background:"rgba(255,255,255,.06)"}}),
+                            React.createElement("span",{className:"text-gray-600 text-xs"},"o "+(isRegister?"registrate con tu correo":"inicia sesi\u00f3n con correo")),
+                            React.createElement("div",{className:"flex-1 h-px",style:{background:"rgba(255,255,255,.06)"}})
+                        ),
+                        React.createElement("form",{onSubmit:handleSubmit,className:"space-y-3"},
+                            isRegister&&React.createElement("input",{required:true,placeholder:"Tu nombre",value:name,onChange:function(e){setName(e.target.value)},className:"input"}),
+                            React.createElement("input",{required:true,type:"email",placeholder:"Correo electr\u00f3nico",value:email,onChange:function(e){setEmail(e.target.value)},className:"input"}),
+                            React.createElement("input",{required:true,type:"password",placeholder:"Contrase\u00f1a (m\u00ednimo 6 caracteres)",minLength:"6",value:password,onChange:function(e){setPassword(e.target.value)},className:"input"}),
+                            error&&React.createElement("p",{className:"text-red-400 text-xs px-1"},error),
+                            React.createElement("button",{type:"submit",disabled:loading,className:"btn-primary"+((loading)?" opacity-50":""}),loading?"Cargando...":isRegister?"Crear cuenta":"Iniciar sesi\u00f3n")
+                        ),
+                        React.createElement("p",{className:"text-center text-gray-500 text-sm mt-5"},
+                            isRegister?"\u00bfYa tienes cuenta? ":"\u00bfNo tienes cuenta? ",
+                            React.createElement("button",{onClick:function(){setIsRegister(!isRegister);setError("")},className:"text-accent font-semibold hover:underline"},isRegister?"Iniciar sesi\u00f3n":"Crear cuenta gratis")
+                        )
+                    ),
+                    React.createElement("p",{className:"text-center text-gray-600 text-xs mt-6"},"Al continuar aceptas los t\u00e9rminos y condiciones")
+                ),
+                showPhoneModal&&React.createElement("div",{className:"fixed inset-0 z-[100] flex items-center justify-center px-5",style:{background:"rgba(0,0,0,.8)",backdropFilter:"blur(8px)"}},
+                    React.createElement("div",{className:"glass-card p-6 w-full max-w-sm"},
+                        React.createElement("div",{className:"flex items-center justify-between mb-5"},
+                            React.createElement("h3",{className:"text-white font-bold text-lg"},confirmationResult?"Verificar c\u00f3digo":"Iniciar con tel\u00e9fono"),
+                            React.createElement("button",{onClick:function(){setShowPhoneModal(false);setConfirmationResult(null);setPhone('');setVerificationCode('');setError('')},className:"w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-white",style:{background:"rgba(255,255,255,.05)"}},"\u2715")
+                        ),
+                        !confirmationResult?React.createElement(React.Fragment,null,
+                            React.createElement("p",{className:"text-gray-500 text-sm mb-4"},"Ingresa tu n\u00famero con c\u00f3digo de pa\u00eds"),
+                            React.createElement("input",{type:"tel",value:phone,onChange:function(e){setPhone(e.target.value)},placeholder:"+1 809 123 4567",className:"input mb-4",disabled:phoneLoading}),
+                            React.createElement("div",{ref:recaptchaRef}),
+                            error&&React.createElement("p",{className:"text-red-400 text-xs px-1 mb-3"},error),
+                            React.createElement("button",{onClick:handleSendCode,disabled:phoneLoading||!phone,className:"btn-primary"+((phoneLoading)?" opacity-50":"")},phoneLoading?"Enviando c\u00f3digo...":"Enviar c\u00f3digo")
+                        ):React.createElement(React.Fragment,null,
+                            React.createElement("p",{className:"text-gray-500 text-sm mb-4"},"C\u00f3digo enviado a "+phone),
+                            React.createElement("input",{type:"text",value:verificationCode,onChange:function(e){setVerificationCode(e.target.value)},placeholder:"000000",maxLength:"6",className:"input mb-4 text-center text-2xl tracking-[0.3em] font-mono",disabled:phoneLoading}),
+                            error&&React.createElement("p",{className:"text-red-400 text-xs px-1 mb-3"},error),
+                            React.createElement("button",{onClick:handleVerifyCode,disabled:phoneLoading||!verificationCode,className:"btn-primary"+((phoneLoading)?" opacity-50":"")},phoneLoading?"Verificando...":"Verificar c\u00f3digo"),
+                            React.createElement("button",{onClick:function(){setConfirmationResult(null);setVerificationCode('');setError('')},className:"w-full text-center text-gray-500 text-sm mt-3 hover:text-white"},"Cambiar n\u00famero")
+                        )
+                    )
+                )
+            )
+        }
+
+        /* ===== PROTECTED ROUTE ===== */
+        function ProtectedRoute(p){
+            var auth=useAuth();
+            if(auth.loading)return React.createElement("div",{className:"min-h-screen flex items-center justify-center"},React.createElement("div",{className:"w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"}));
+            if(!auth.user){
+                return React.createElement("div",{className:"min-h-screen flex items-center justify-center px-5"},
+                    React.createElement("div",{className:"glass-card p-8 max-w-md text-center"},
+                        React.createElement("div",{className:"w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6",style:{background:"linear-gradient(135deg,rgba(232,69,69,.2),rgba(245,158,11,.2))"}},
+                            React.createElement("span",{className:"text-4xl"},"\ud83d\udd12")
+                        ),
+                        React.createElement("h2",{className:"font-display text-2xl font-bold text-white mb-3"},"Acceso Requerido"),
+                        React.createElement("p",{className:"text-gray-500 text-sm mb-6"},"Necesitas iniciar sesi\u00f3n para acceder a esta secci\u00f3n."),
+                        React.createElement("a",{href:"#/login",className:"btn-primary inline-block"},"Iniciar sesi\u00f3n"),
+                        React.createElement("p",{className:"text-gray-600 text-xs mt-4"},"\u00bfNo tienes cuenta? ",React.createElement("a",{href:"#/login",className:"text-accent hover:underline"},"Cr\u00e9ala gratis"))
+                    )
+                )
+            }
+            return p.children
+        }
+
+        /* ===== UNAUTHORIZED PAGE ===== */
+        function UnauthorizedPage(){
+            return React.createElement("div",{className:"min-h-screen flex items-center justify-center px-5"},
+                React.createElement("div",{className:"glass-card p-8 max-w-md text-center"},
+                    React.createElement("div",{className:"w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6",style:{background:"linear-gradient(135deg,rgba(232,69,69,.2),rgba(245,158,11,.2))"}},
+                        React.createElement("span",{className:"text-4xl"},"\ud83d\udeab")
+                    ),
+                    React.createElement("h2",{className:"font-display text-2xl font-bold text-white mb-3"},"No Autorizado"),
+                    React.createElement("p",{className:"text-gray-500 text-sm mb-6"},"No tienes permisos para acceder a esta secci\u00f3n."),
+                    React.createElement("a",{href:"#/",className:"btn-primary inline-block"},"Volver al Inicio")
+                )
+            )
+        }
+
+        /* ===== APP ===== */
+        function App(){
+            var hash=useHash(),route=hash.split("?")[0]||"#/";
+            var auth=useAuth();
+            var os=useState(function(){return gs("vc_places",null)||PL}),places=os[0],setPlacesS=os[1];
+            var os2=useState(function(){return gs("vc_favs",[])}),favs=os2[0],setFavs=os2[1];
+            var setPlaces=function(p){setPlacesS(p);ss("vc_places",p)};
+            var toggleFav=function(id){
+                var n=favs.indexOf(id)!==-1?favs.filter(function(f){return f!==id}):favs.concat([id]);
+                setFavs(n);ss("vc_favs",n)
+            };
+            if(auth.loading)return React.createElement("div",{className:"min-h-screen flex items-center justify-center"},React.createElement("div",{className:"w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"}));
+            var page;
+            if(route==="#/login")page=React.createElement(LoginPage,null);
+            else if(route==="#/"||route==="#")page=React.createElement(HomePage,{places:places});
+            else if(route==="#/explore")page=React.createElement(ExplorePage,{places:places});
+            else if(route==="#/zones")page=React.createElement(ZonesPage,{places:places});
+            else if(route.indexOf("#/place/")===0)page=React.createElement(PlacePage,{places:places,favorites:favs,toggleFavorite:toggleFav});
+            else if(route==="#/favorites")page=React.createElement(ProtectedRoute,null,React.createElement(FavPage,{places:places,favorites:favs}));
+            else if(route==="#/business")page=React.createElement(ProtectedRoute,null,React.createElement(BizPage,null));
+            else if(route==="#/admin")page=React.createElement(ProtectedRoute,null,React.createElement(AdminPage,{places:places,setPlaces:setPlaces}));
+            else page=React.createElement(HomePage,{places:places});
+            return React.createElement(React.Fragment,null,React.createElement(Navbar,{route:route,user:auth.user}),page,route!="#/login"&&React.createElement(BottomNav,{route:route}))
+        }
+
+        ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App))
+    </script>
+</body>
+</html>

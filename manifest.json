@@ -1,0 +1,84 @@
+{
+  "name": "VIBE CANA - Guía Punta Cana",
+  "short_name": "VIBE CANA",
+  "description": "Los mejores lugares para comer, beber, salir y disfrutar en Punta Cana. Ofertas, promociones y experiencias exclusivas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050508",
+  "theme_color": "#E84545",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es",
+  "categories": ["food", "nightlife", "travel", "entertainment", "lifestyle"],
+  "id": "/",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icons/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "VIBE CANA - Explorar lugares"
+    },
+    {
+      "src": "icons/screenshot-narrow.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "VIBE CANA - Tu guía en Punta Cana"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explorar Lugares",
+      "short_name": "Explorar",
+      "url": "/#/explore",
+      "description": "Explora todos los lugares de Punta Cana",
+      "icons": [
+        {
+          "src": "icons/icon-192.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Mis Favoritos",
+      "short_name": "Favoritos",
+      "url": "/#/favorites",
+      "description": "Tus lugares guardados",
+      "icons": [
+        {
+          "src": "icons/icon-192.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Mi Negocio",
+      "short_name": "Negocio",
+      "url": "/#/business",
+      "description": "Gestiona tu negocio"
+    }
+  ],
+  "related_applications": [],
+  "handlers": [
+    {
+      "protocol": "web+vibecana",
+      "url": "/%s"
+    }
+  ]
+}
