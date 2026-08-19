@@ -174,9 +174,11 @@
         var fbConfig={apiKey:"AIzaSyBksk00Bqu7oHvcKEb4DniYjPGLxxQGgBw",authDomain:"vibecana-e938d.firebaseapp.com",projectId:"vibecana-e938d",storageBucket:"vibecana-e938d.firebasestorage.app",messagingSenderId:"808944486921",appId:"1:808944486921:web:65de43eefdfb0b5f9606d8"};
         firebase.initializeApp(fbConfig);
         var fbAuth=firebase.auth();
+        window._fbReady=true;
         var googleProvider=new firebase.auth.GoogleAuthProvider();
         var facebookProvider=new firebase.auth.FacebookAuthProvider();
-        var appleProvider=new firebase.auth.OAuthProvider('apple.com');
+        var appleProvider;
+        try{appleProvider=new firebase.auth.OAuthProvider('apple.com')}catch(e){}
 
         function useAuth(){
             var s=useState(null),user=s[0],setUser=s[1];
@@ -971,7 +973,7 @@
             return React.createElement(React.Fragment,null,React.createElement(Navbar,{route:route,user:auth.user}),page,route!="#/login"&&route!="#/admin"&&React.createElement(BottomNav,{route:route}))
         }
 
-        ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App))
+        try{ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App))}catch(e){document.getElementById("root").innerHTML='<div style="padding:40px;text-align:center;color:white;"><h1>VIBE CANA</h1><p style="color:#888;margin-top:20px;">Cargando... Refresca la pagina.</p></div>'}
     </script>
 </body>
 </html>
