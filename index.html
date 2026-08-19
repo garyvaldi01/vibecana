@@ -15,9 +15,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.svg">
     <title>VIBE CANA</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -170,7 +168,7 @@
     <div id="root"></div>
     <script type="text/babel">
         var useState=React.useState,useEffect=React.useEffect,useMemo=React.useMemo,useRef=React.useRef;
-        if("serviceWorker"in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+        
 
         /* ===== FIREBASE ===== */
         var fbConfig={apiKey:"AIzaSyBksk00Bqu7oHvcKEb4DniYjPGLxxQGgBw",authDomain:"vibecana-e938d.firebaseapp.com",projectId:"vibecana-e938d",storageBucket:"vibecana-e938d.firebasestorage.app",messagingSenderId:"808944486921",appId:"1:808944486921:web:65de43eefdfb0b5f9606d8"};
