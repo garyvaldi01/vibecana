@@ -404,7 +404,7 @@
                         React.createElement("input",{type:"text",value:query,onChange:function(e){setQuery(e.target.value)},onKeyDown:function(e){if(e.key==="Enter")doSearch()},placeholder:"Qu\u00e9 buscas? Rooftop, bar, restaurante...",className:"input mb-3"}),
                         React.createElement("div",{className:"flex flex-wrap gap-2 mb-3"},
                             ["Rooftops","Bares","Restaurantes","Nightlife","Beach Clubs"].map(function(s){
-                                return React.createElement("button",{key:s,onClick:function(){setQuery(s)},className:"text-xs px-3 py-1.5 rounded-full border border-white/8 text-gray-500 pill hover:border-coral-500 hover:text-coral-500 transition-all"},s)
+                                return React.createElement("button",{key:s,onClick:function(){setQuery(s)},className:"text-xs px-3 py-1.5 rounded-full border border-white/10 text-gray-500 pill transition-all"},s)
                             })
                         ),
                         React.createElement("select",{value:zone,onChange:function(e){setZone(e.target.value)},className:"input mb-3 text-gray-500"},
@@ -432,7 +432,7 @@
             return React.createElement("section",{className:"py-12 sm:py-16 px-4 max-w-6xl mx-auto"},
                 React.createElement(Reveal,null,
                     React.createElement("div",{className:"text-center mb-8"},
-                        React.createElement("p",{className:"text-coral-500 text-xs font-bold tracking-[.2em] uppercase mb-2"},'\ud83d\udd25 PROMOCIONES'),
+                        React.createElement("p",{className:"text-xs font-bold tracking-[.2em] uppercase mb-2"},'\ud83d\udd25 PROMOCIONES'),
                         React.createElement("h2",{className:"font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1"},"Ofertas de hoy")
                     )
                 ),
@@ -456,7 +456,7 @@
                                 ),
                                 React.createElement("div",{className:"flex items-center justify-between"},
                                     React.createElement(Stars,{rating:pl.rating}),
-                                    React.createElement("span",{className:"text-coral-500 font-bold text-xs tracking-wide"},"IR AHORA \u2192")
+                                    React.createElement("span",{className:"font-bold text-xs tracking-wide"},"IR AHORA \u2192")
                                 )
                             )
                         )
@@ -569,7 +569,7 @@
                         React.createElement("div",{className:"glass-card p-3 text-center"},React.createElement("p",{className:"text-gray-500 text-xs mb-1"},'\ud83c\udf1f Rating'),React.createElement("p",{className:"text-white text-sm font-semibold"},pl.rating," \u2605"))
                     ),
                     pl.promo&&React.createElement("div",{className:"rounded-2xl p-4 mb-6",style:{background:"linear-gradient(135deg,rgba(255,107,53,.1),rgba(245,158,11,.1))",border:"1px solid rgba(255,107,53,.15)"}},
-                        React.createElement("p",{className:"text-coral-500 font-bold text-sm"},'\ud83d\udd25 '+pl.promo)
+                        React.createElement("p",{className:"font-bold text-sm"},'\ud83d\udd25 '+pl.promo)
                     ),
                     React.createElement("div",{className:"flex gap-3"},
                         React.createElement("a",{href:"tel:"+pl.phone,className:"btn-success flex-1 text-center"},"Llamar"),
@@ -672,7 +672,7 @@
                         ),
                         React.createElement("p",{className:"text-center text-gray-500 text-sm mt-4"},
                             isRegister?"\u00bfYa tienes cuenta? ":"\u00bfNo tienes cuenta? ",
-                            React.createElement("button",{onClick:function(){setIsRegister(!isRegister);setError("")},className:"text-coral-500 font-semibold hover:underline"},isRegister?"Iniciar sesi\u00f3n":"Crear cuenta gratis")
+                            React.createElement("button",{onClick:function(){setIsRegister(!isRegister);setError("")},className:"font-semibold hover:underline"},isRegister?"Iniciar sesi\u00f3n":"Crear cuenta gratis")
                         )
                     ),
                     React.createElement("p",{className:"text-center text-gray-600 text-xs mt-4"},"Al continuar aceptas los t\u00e9rminos y condiciones")
@@ -714,7 +714,7 @@
         /* ===== PROTECTED ROUTE ===== */
         function ProtectedRoute(p){
             var auth=useAuth();
-            if(auth.loading)return React.createElement("div",{className:"min-h-screen flex items-center justify-center"},React.createElement("div",{className:"w-8 h-8 border-2 border-coral-500 border-t-transparent rounded-full animate-spin"}));
+            if(auth.loading)return React.createElement("div",{className:"min-h-screen flex items-center justify-center"},React.createElement("div",{className:"w-8 h-8 border-2 rounded-full animate-spin"}));
             if(!auth.user){
                 return React.createElement("div",{className:"min-h-screen flex items-center justify-center px-4"},
                     React.createElement("div",{className:"glass-card p-6 sm:p-8 max-w-sm text-center"},
@@ -810,9 +810,9 @@
                     tab==="stats"&&React.createElement("div",{className:"space-y-4"},
                         React.createElement("div",{className:"grid grid-cols-2 lg:grid-cols-4 gap-3"},
                             React.createElement("div",{className:"stat-card"},React.createElement("p",{className:"text-gray-500 text-xs mb-1"},'\ud83c\udfed Total lugares'),React.createElement("p",{className:"text-2xl font-bold text-white"},totalPlaces)),
-                            React.createElement("div",{className:"stat-card"},React.createElement("p",{className:"text-gray-500 text-xs mb-1"},'\u2705 Activos'),React.createElement("p",{className:"text-2xl font-bold text-palm-500"},activePlaces)),
-                            React.createElement("div",{className:"stat-card"},React.createElement("p",{className:"text-gray-500 text-xs mb-1"},'\ud83c\udfaf Categor\u00edas'),React.createElement("p",{className:"text-2xl font-bold text-sand-500"},categories)),
-                            React.createElement("div",{className:"stat-card"},React.createElement("p",{className:"text-gray-500 text-xs mb-1"},'\ud83d\udccd Zonas'),React.createElement("p",{className:"text-2xl font-bold text-ocean-500"},zones))
+                            React.createElement("div",{className:"stat-card"},React.createElement("p",{className:"text-gray-500 text-xs mb-1"},'\u2705 Activos'),React.createElement("p",{className:"text-2xl font-bold"},activePlaces)),
+                            React.createElement("div",{className:"stat-card"},React.createElement("p",{className:"text-gray-500 text-xs mb-1"},'\ud83c\udfaf Categor\u00edas'),React.createElement("p",{className:"text-2xl font-bold"},categories)),
+                            React.createElement("div",{className:"stat-card"},React.createElement("p",{className:"text-gray-500 text-xs mb-1"},'\ud83d\udccd Zonas'),React.createElement("p",{className:"text-2xl font-bold"},zones))
                         ),
                         React.createElement("div",{className:"glass-card p-4"},
                             React.createElement("h3",{className:"font-bold text-white text-sm mb-3"},'Lugares por categor\u00eda'),
@@ -848,7 +848,7 @@
                                 ),
                                 React.createElement("div",{className:"flex justify-between items-center py-2 border-b border-white/5"},
                                     React.createElement("span",{className:"text-gray-400 text-sm"},"Firebase"),
-                                    React.createElement("span",{className:"text-palm-500 text-sm font-semibold"},'Conectado \u2713')
+                                    React.createElement("span",{className:"text-sm font-semibold"},'Conectado \u2713')
                                 ),
                                 React.createElement("div",{className:"flex justify-between items-center py-2"},
                                     React.createElement("span",{className:"text-gray-400 text-sm"},"Admin"),
@@ -957,7 +957,7 @@
                 var n=favs.indexOf(id)!==-1?favs.filter(function(f){return f!==id}):favs.concat([id]);
                 setFavs(n);ss("vc_favs",n)
             };
-            if(auth.loading)return React.createElement("div",{className:"min-h-screen flex items-center justify-center"},React.createElement("div",{className:"w-8 h-8 border-2 border-coral-500 border-t-transparent rounded-full animate-spin"}));
+            if(auth.loading)return React.createElement("div",{className:"min-h-screen flex items-center justify-center"},React.createElement("div",{className:"w-8 h-8 border-2 rounded-full animate-spin"}));
             var page;
             if(route==="#/login")page=React.createElement(LoginPage,null);
             else if(route==="#/"||route==="#")page=React.createElement(React.Fragment,null,React.createElement(Hero,{places:places}),React.createElement(Promos,{places:places}));
